@@ -241,14 +241,14 @@ integrations:
 ### ⚡ CRITICAL SUCCESS CRITERIA
 1. **ZERO GAPS POLICY**: Every file, function, interface, and configuration must be complete, functional, and production-ready
 2. **LLM OPTIMIZATION**: All tools must be designed for optimal LLM interaction with clear naming, focused functionality, and structured outputs
-3. **FULL MCP COMPLIANCE**: Implement complete MCP specification including JSON-RPC 2.0, all transports (stdio, HTTP, SSE), and all protocol messages
+3. **FULL MCP COMPLIANCE**: Implement complete MCP specification including JSON-RPC 2.0, supported transports (stdio, HTTP Streamable), and all protocol messages
 4. **REFERENCE ARCHITECTURE COMPLIANCE**: Follow the exact patterns from the mcp-weather-server reference implementation 
 5. **TYPE SAFETY ENFORCEMENT**: All TypeScript code must use strict typing with zero `any` types (except where absolutely necessary)
 6. **ERROR HANDLING EXCELLENCE**: Implement comprehensive error boundaries with meaningful, LLM-friendly messages and recovery strategies
 7. **TEST COVERAGE MANDATE**: Provide complete .spec.ts files achieving >90% coverage including LLM interaction simulations
 8. **PRODUCTION READINESS**: Include Docker, CI/CD, health checks, monitoring, logging, security hardening, and documentation
 9. **SEQUENTIAL THINKING**: Apply step-by-step analysis during requirement parsing and implementation planning
-10. **CONTEXT7 INTEGRATION**: Use Context7 MCP for all framework/library API references and code samples
+10. **CONTEXT7 INTEGRATION**: **MANDATORY** - Use Context7 MCP for all framework/library API references and code samples
 
 ### 🏗️ ARCHITECTURAL PRINCIPLES
 - **Module System**: ES Modules with "type": "module" and .js extensions in all imports
@@ -258,7 +258,7 @@ integrations:
 - **Resilience First**: Complete implementation of Circuit Breaker, Retry, Rate Limiting, and Bulkhead patterns
 - **Validation Everywhere**: Zod schemas for ALL inputs, configurations, and API responses with sanitization
 - **Structured Logging**: Pino logger with correlation IDs, performance metrics, audit trails, and trace context
-- **Transport Flexibility**: Support stdio (local), modern HTTP/Streamable (production), and SSE (legacy/remote) transports
+- **Transport Flexibility**: Support stdio (local) and modern HTTP/Streamable (production) transports
 - **Graceful Operations**: Proper startup checks, health monitoring, and shutdown procedures
 - **Security by Design**: Input sanitization, rate limiting per client, API key management, no sensitive data in errors
 
@@ -1651,12 +1651,24 @@ jobs:
    - Validate LLM optimization needs
    - Create implementation plan with dependencies
 
-2. **Code Generation** (Context7 Integration)
-   - Use Context7 for all API references
-   - Generate complete, production-ready code
-   - Include all error handling and edge cases
-   - Add comprehensive inline documentation
-   - Ensure LLM-friendly interfaces throughout
+2. **Code Generation** (Context7 Integration - MANDATORY)
+   - **🔗 ALWAYS USE CONTEXT7 MCP** for all framework/library documentation and API references
+   - **NEVER use outdated documentation** - Context7 provides the latest API references
+   - **Required Context7 queries for**:
+     * `@modelcontextprotocol/sdk` - MCP SDK documentation and examples
+     * `fastify` - Fastify 5.6.0 API reference and best practices  
+     * `typescript` - TypeScript 5.9.2 features and patterns
+     * `pino` - Pino 9.9.4 logging configuration and usage
+     * `undici` - Undici 7.16.0 HTTP client and connection pooling
+     * `zod` - Zod 3.23.8 validation schemas and parsing
+     * `lru-cache` - LRU-Cache 11.2.1 configuration and methods
+     * `eslint` - ESLint 9.35.0 flat config and rules
+     * `vitest` - Vitest 3.2.4 testing patterns and configuration
+     * `supertest` - Supertest 7.0.0 HTTP testing utilities
+   - Generate complete, production-ready code using verified API patterns
+   - Include all error handling and edge cases from official documentation
+   - Add comprehensive inline documentation with accurate references
+   - Ensure LLM-friendly interfaces throughout using best practices
 
 3. **Security Implementation**
    - Apply input sanitization to all endpoints
