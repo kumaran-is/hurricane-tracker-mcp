@@ -1,6 +1,6 @@
 # 🌀 Hurricane Tracker MCP Server
 
-A production-grade Model Context Protocol (MCP) server that provides real-time hurricane tracking, forecast cones, local alerts, and historical storm data through MCP tools for AI assistants like Cline.
+A production-grade LLM-friendly Model Context Protocol (MCP) server that provides real-time hurricane tracking, forecast cones, local alerts, and historical storm data through MCP tools for AI assistants like Cline.
 
 ## 🚀 Quick Start
 
@@ -35,6 +35,8 @@ Add the following configuration to your Cline MCP settings file (`cline_mcp_sett
 {
   "mcpServers": {
     "hurricane-tracker": {
+      "disabled": false,
+      "timeout": 30000,
       "command": "npm",
       "args": ["run", "stdio"],
       "cwd": "/path/to/your/hurricane-tracker-mcp",
