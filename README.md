@@ -114,80 +114,23 @@ Search from 2020-01-01 to 2024-12-31, filtering for Atlantic basin storms. Pleas
 
 ## 🌀 Available Hurricane Tools
 
-### 1. `get_active_storms`
-Lists all active tropical cyclones globally with real-time data.
+| Tool | Description | Required Parameters | Optional Parameters | Example Usage |
+|------|-------------|-------------------|-------------------|---------------|
+| `get_active_storms` | Lists all active tropical cyclones globally | None | `basin` (AL, EP, CP, WP, NP, SP, SI) | Get Atlantic storms: `{"basin": "AL"}` |
+| `get_storm_cone` | Forecast cone of uncertainty & 5-day track | `stormId` (e.g., "AL052024") | None | `{"stormId": "AL052024"}` |
+| `get_storm_track` | Historical track data for a storm | `stormId` (e.g., "AL052024") | None | `{"stormId": "AL052024"}` |
+| `get_local_hurricane_alerts` | Active hurricane alerts by location | `lat` (-90 to 90)<br>`lon` (-180 to 180) | None | Miami: `{"lat": 25.76, "lon": -80.19}` |
+| `search_historical_tracks` | Historical tracks by area & date | `aoi` (GeoJSON Polygon)<br>`start` (YYYY-MM-DD)<br>`end` (YYYY-MM-DD) | `basin` (AL, EP, etc.) | Gulf search: See detailed example below |
 
-**Parameters:**
-- `basin` (optional): Filter by basin code (AL, EP, CP, WP, NP, SP, SI)
+### Detailed Examples
 
-**Example:**
-```json
-{
-  "basin": "AL"
-}
-```
-
-### 2. `get_storm_cone`
-Retrieves the forecast cone of uncertainty and 5-day forecast points.
-
-**Parameters:**
-- `stormId` (required): Storm identifier (e.g., "AL052024")
-
-**Example:**
-```json
-{
-  "stormId": "AL052024"
-}
-```
-
-### 3. `get_storm_track`
-Gets historical track data showing where a storm has been.
-
-**Parameters:**
-- `stormId` (required): Storm identifier (e.g., "AL052024")
-
-**Example:**
-```json
-{
-  "stormId": "AL052024"
-}
-```
-
-### 4. `get_local_hurricane_alerts`
-Retrieves active hurricane alerts for a specific location.
-
-**Parameters:**
-- `lat` (required): Latitude (-90 to 90)
-- `lon` (required): Longitude (-180 to 180)
-
-**Example:**
-```json
-{
-  "lat": 25.76,
-  "lon": -80.19
-}
-```
-
-### 5. `search_historical_tracks`
-Searches historical hurricane tracks by area and date range.
-
-**Parameters:**
-- `aoi` (required): Area of interest as GeoJSON Polygon
-- `start` (required): Start date (YYYY-MM-DD format)
-- `end` (required): End date (YYYY-MM-DD format)
-- `basin` (optional): Filter by basin code
-
-**Example:**
+**Complex GeoJSON Example for `search_historical_tracks`:**
 ```json
 {
   "aoi": {
     "type": "Polygon",
     "coordinates": [[[
-      [-95.0, 25.0],
-      [-85.0, 25.0],
-      [-85.0, 31.0],
-      [-95.0, 31.0],
-      [-95.0, 25.0]
+      [-95.0, 25.0], [-85.0, 25.0], [-85.0, 31.0], [-95.0, 31.0], [-95.0, 25.0]
     ]]]
   },
   "start": "2020-01-01",
@@ -208,7 +151,7 @@ npm run build
 # Run with stdio transport (for Cline)
 npm run stdio
 
-# Run with HTTP transport
+# Run with Streamable HTTP transport
 npm run http
 
 # Run tests
@@ -251,7 +194,7 @@ When testing with the prompt above, you should see:
 
 The server supports extensive configuration through environment variables. See `.env.example` for all available options:
 
-- **Transport**: stdio, http, or sse
+- **Transport**: stdio, Streamable HTTP, or sse
 - **Logging**: Configurable levels and formats
 - **Performance**: Timeout, retry, and cache settings
 - **Security**: Rate limiting and input validation
