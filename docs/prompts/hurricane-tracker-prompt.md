@@ -234,81 +234,96 @@ integrations:
 
 ---
 
-## �️ SOLID ARCHITECTURE IMPLEMENTATION
+## 🏗️ SOLID ARCHITECTURE IMPLEMENTATION
 
-### Clean Separation of Concerns 
+### Clean Separation of Concerns (Perfect 3-Layer Implementation)
 
-The MCP Server ishould mplement SOLID principles with clear architectural boundaries:
+The MCP Server implements SOLID principles with clear architectural boundaries:
 
 ```bash
-Client (Cline) → server.ts (Transport) → [domain name(example:hurricane]-mcp-server.ts (Protocol) → [domain name(example:hurricane]-service.ts (Business) → External APIs
+Client (Cline) or AI Agent
+    ↓ (MCP Protocol)
+server.ts (Transport Layer - Streamable HTTP(MCP SDK StreamableHTTPServerTransport + Fastify) and Stdio(MCP SDK StdioServerTransport))
+    ↓ (Transport Delegation)
+[domainname(example:hurricane]-mcp-server.ts (Protocol Layer - Tool Registration & Validation)
+    ↓ (Validated Business Requests)
+[domainname(example:hurricane]-service.ts (Business Layer -  Domain Logic)
+    ↓ (HTTP Requests)
+External APIs 
 ```
 
-#### **🔧 server.ts** - Infrastructure and Transport Management
-**Role**: Application Entry Point & Transport Orchestration
+#### **🔧 server.ts** - Transport Layer & Infrastructure Management
+**Role**: Application Entry Point & Transport Orchestration ✅
 - **Primary Responsibilities**:
   - Serves as the main entry point for the MCP server application
   - Handles command-line argument parsing and environment configuration loading
   - Manages transport selection and initialization (stdio, Streamable HTTP)
-  - Sets up Fastify HTTP server with multiple endpoints (/mcp for POST/GET/DELETE, /health)
+  - Sets up **Fastify HTTP server** with multiple endpoints (/mcp for POST/GET/DELETE, /health)
   - Implements session management for HTTP transport with session ID tracking
   - Handles graceful shutdown with proper resource cleanup
   - Manages process-level error handling (uncaught exceptions, unhandled rejections)
   - Coordinates server lifecycle management (start, stop, error handling)
+  - **Delegates all MCP protocol handling to [domainname(example:hurricane)]-mcp-server.ts**
 
 **Key Features**:
 - Multiple transport support (stdio for local AI assistants, Streamable HTTP for production/remote)
+- **Fastify-powered HTTP transport** for high performance
 - 4ms startup time for stdio transport, 58ms for Streamable HTTP transport
-- Health check endpoints for monitoring
+- Health check endpoints showing 3-layer architecture status
 - Graceful shutdown with connection cleanup
 - Environment-based transport selection
+- **Perfect delegation to protocol layer**
 
 ---
 
-#### **🌐 [domainname(example:hurricane]-mcp-server.ts** - Protocol Communication and Tool Orchestration
-**Role**: MCP Protocol Implementation & Tool Registry
+#### **🌐 [domainname(example:hurricane)]-mcp-server.ts** - Protocol Layer & Tool Orchestration
+**Role**: MCP Protocol Implementation & Tool Registry ✅
 - **Primary Responsibilities**:
   - Implements the complete Model Context Protocol (MCP) specification v2025-06-18
   - Manages JSON-RPC 2.0 message handling and protocol compliance
   - Handles MCP lifecycle events (initialize, initialized, shutdown) with proper protocol negotiation
-  - Registers and exposes all the tools with proper schema validation
+  - **Registers and exposes all tools** with proper schema validation
   - Processes incoming tool calls and routes them to appropriate handlers
   - Implements input validation and MCP-compliant error responses
   - Manages server capabilities negotiation with clients
   - Provides performance logging and monitoring for tool executions
-  - Acts as the protocol adapter between MCP clients (like Cline) and the business service layer
+  - Acts as the protocol adapter between MCP clients (like Cline) and the domain( Business Layer & External API Integration) service layer
+  - **Delegates business logic to [domainname(example:hurricane)]-service.ts**
 
 **Key Features**:
 - Full MCP v2025-06-18 compliance with JSON-RPC 2.0
-- All the tools
+- **All tools**
 - Protocol-level input validation using Zod schemas
 - Correlation ID tracking for request tracing
 - LLM-optimized error messages with recovery hints
 - Performance metrics for all tool calls
+- **Clean separation from business logic**
 
 ---
 
-#### **[domain name(example:hurricane]-service.ts** - Business Logic and External API Integration
-**Role**:  Domain Logic , Business Logic & API Integration
+#### **domainname(example:hurricane)]-service.ts** - Business Layer & External API Integration
+**Role**: Domain Logic, Business Logic & API Integration ✅
 - **Primary Responsibilities**:
-  - Encapsulates all data retrieval logic from external APIs
+  - Encapsulates all  data retrieval logic from external APIs
   - Manages HTTP client operations through optimized undici connection pools
   - Implements all the business logic for data transformation before invoking external API
-  - Handles hurricane data processing and response transformation
+  - Handles data processing and response transformation
   - Provides comprehensive caching strategies for data
   - Implements resilience patterns (retries, circuit breaker, rate limiting) through pool manager
-  - Maps hurricane status codes to human-readable descriptions
+  - Maps status codes to human-readable descriptions
   - Manages input validation and custom error handling for domain-specific operations
   - Formats responses for optimal LLM consumption
   - Abstracts external API complexity from the MCP protocol layer
+  - **Pure domain logic without MCP protocol concerns**
 
 **Key Features**:
-- Real-time data integration with external APIs
+- Real-time data integration with External APIs
 - Intelligent caching with TTL management
 - Circuit breaker and retry logic for API resilience
 - Response formatting optimized for LLM context windows
 - Comprehensive error handling with domain-specific recovery strategies
 - Performance monitoring for all external API calls
+- **Complete separation from transport and protocol layers**
 
 ---
 
@@ -329,9 +344,9 @@ Client (Cline) or AI Agent
     ↓ (MCP Protocol)
 server.ts (Transport Layer - stdio or Streameable HTTP) 
     ↓ (JSON-RPC Messages)
-[domain name(example:hurricane]-mcp-server.ts (Protocol Layer)
+[domain name(example:hurricane)]-mcp-server.ts (Protocol Layer)
     ↓ (Validated Business Requests)
-[domain name(example:hurricane]-service.ts (Business Layer)
+[domain name(example:hurricane)]-service.ts (Business Layer)
     ↓ (HTTP Requests)
 External APIs 
 ```
@@ -354,7 +369,7 @@ External APIs
 1. **ZERO GAPS POLICY**: Every file, function, interface, and configuration must be complete, functional, and production-ready
 2. **LLM OPTIMIZATION**: All tools must be designed for optimal LLM interaction with clear naming, focused functionality, and structured outputs
 3. **FULL MCP COMPLIANCE**: Implement complete MCP specification including JSON-RPC 2.0, supported transports (stdio, HTTP Streamable), and all protocol messages
-4. **REFERENCE ARCHITECTURE COMPLIANCE**: Follow the exact patterns from the mcp-weather-server reference implementation 
+4. **REFERENCE ARCHITECTURE COMPLIANCE**: Follow the exact patterns from the mcp-weather-server reference implementation. Ask for user teh path for reference implementation
 5. **TYPE SAFETY ENFORCEMENT**: All TypeScript code must use strict typing with zero `any` types (except where absolutely necessary)
 6. **ERROR HANDLING EXCELLENCE**: Implement comprehensive error boundaries with meaningful, LLM-friendly messages and recovery strategies
 7. **TEST COVERAGE MANDATE**: Provide complete .spec.ts files achieving >90% coverage including LLM interaction simulations
