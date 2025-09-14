@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { logger, performanceLogger, generateCorrelationId } from './logger-pino.js';
 import { hurricaneService } from './hurricane-service.js';
 import { 
-  ValidationError, 
   NotFoundError, 
   UpstreamTimeoutError 
 } from './errors/base-errors.js';
@@ -68,10 +67,8 @@ export class HurricaneMcpServer {
    * Setup MCP protocol event handlers for lifecycle management
    */
   private setupProtocolHandlers(): void {
-    // Handle MCP initialization with capability negotiation
-    this.mcpServer.onerror = (error) => {
-      logger.error({ error: error.message }, 'MCP Server error');
-    };
+    // MCP server handles errors through transport layer
+    // No direct error handler needed here
 
     logger.info({
       serverName: 'hurricane-tracker-mcp',
@@ -257,12 +254,13 @@ export class HurricaneMcpServer {
 
       // Protocol-level response formatting and logging
       const duration = Date.now() - startTime;
-      performanceLogger.toolCall({
+      performanceLogger.apiCall({
         correlationId,
-        tool: 'get_active_storms',
+        api: 'hurricane-service',
+        endpoint: 'get_active_storms',
+        method: 'TOOL_CALL',
         duration,
-        success: true,
-        inputParams: validated,
+        cached: false,
       });
 
       return this.formatMcpResponse(result, correlationId);
@@ -291,12 +289,13 @@ export class HurricaneMcpServer {
       const result = await hurricaneService.getStormCone(validated);
 
       const duration = Date.now() - startTime;
-      performanceLogger.toolCall({
+      performanceLogger.apiCall({
         correlationId,
-        tool: 'get_storm_cone',
+        api: 'hurricane-service',
+        endpoint: 'get_storm_cone',
+        method: 'TOOL_CALL',
         duration,
-        success: true,
-        inputParams: validated,
+        cached: false,
       });
 
       return this.formatMcpResponse(result, correlationId);
@@ -325,12 +324,13 @@ export class HurricaneMcpServer {
       const result = await hurricaneService.getStormTrack(validated);
 
       const duration = Date.now() - startTime;
-      performanceLogger.toolCall({
+      performanceLogger.apiCall({
         correlationId,
-        tool: 'get_storm_track',
+        api: 'hurricane-service',
+        endpoint: 'get_storm_track',
+        method: 'TOOL_CALL',
         duration,
-        success: true,
-        inputParams: validated,
+        cached: false,
       });
 
       return this.formatMcpResponse(result, correlationId);
@@ -359,12 +359,13 @@ export class HurricaneMcpServer {
       const result = await hurricaneService.getLocalHurricaneAlerts(validated);
 
       const duration = Date.now() - startTime;
-      performanceLogger.toolCall({
+      performanceLogger.apiCall({
         correlationId,
-        tool: 'get_local_hurricane_alerts',
+        api: 'hurricane-service',
+        endpoint: 'get_local_hurricane_alerts',
+        method: 'TOOL_CALL',
         duration,
-        success: true,
-        inputParams: validated,
+        cached: false,
       });
 
       return this.formatMcpResponse(result, correlationId);
@@ -394,12 +395,13 @@ export class HurricaneMcpServer {
       const result = await hurricaneService.searchHistoricalTracks(validated);
 
       const duration = Date.now() - startTime;
-      performanceLogger.toolCall({
+      performanceLogger.apiCall({
         correlationId,
-        tool: 'search_historical_tracks',
+        api: 'hurricane-service',
+        endpoint: 'search_historical_tracks',
+        method: 'TOOL_CALL',
         duration,
-        success: true,
-        inputParams: validated,
+        cached: false,
       });
 
       return this.formatMcpResponse(result, correlationId);
@@ -452,11 +454,13 @@ export class HurricaneMcpServer {
     }, `MCP tool error: ${toolName}`);
 
     // Track error metrics
-    performanceLogger.toolCall({
+    performanceLogger.apiCall({
       correlationId,
-      tool: toolName,
+      api: 'hurricane-service',
+      endpoint: toolName,
+      method: 'TOOL_CALL',
       duration,
-      success: false,
+      cached: false,
       error: error.message,
     });
 

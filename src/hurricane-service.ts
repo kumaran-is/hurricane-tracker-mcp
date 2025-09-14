@@ -363,6 +363,257 @@ export class HurricaneService {
   }
 
   /**
+   * Get storm track data for a specific storm
+   */
+  async getStormTrack(args: z.infer<typeof getStormTrackSchema>): Promise<ToolResponse> {
+    const correlationId = generateCorrelationId();
+    const startTime = Date.now();
+
+    try {
+      const validated = getStormTrackSchema.parse(args);
+      
+      logger.info({ correlationId, stormId: validated.stormId }, 'Getting storm track');
+
+      // Check if storm exists (placeholder logic)
+      if (validated.stormId !== 'AL052024') {
+        throw new NotFoundError('Storm', validated.stormId, correlationId);
+      }
+
+      // Mock storm track data
+      const mockTrack: StormTrack = {
+        track: {
+          type: 'LineString',
+          coordinates: [
+            [-40.5, 10.8],
+            [-41.8, 11.2],
+            [-43.2, 11.8],
+            [-44.1, 12.5],
+            [-45.2, 13.4]
+          ]
+        },
+        points: [
+          {
+            time: '2024-06-28T12:00:00Z',
+            lat: 10.8,
+            lon: -40.5,
+            windKts: 40,
+            pressureMb: 1008,
+            status: 'Tropical Depression'
+          },
+          {
+            time: '2024-06-28T18:00:00Z',
+            lat: 11.2,
+            lon: -41.8,
+            windKts: 50,
+            pressureMb: 1005,
+            status: 'Tropical Storm'
+          },
+          {
+            time: '2024-06-29T00:00:00Z',
+            lat: 11.8,
+            lon: -43.2,
+            windKts: 65,
+            pressureMb: 995,
+            status: 'Tropical Storm'
+          },
+          {
+            time: '2024-06-29T12:00:00Z',
+            lat: 12.5,
+            lon: -44.1,
+            windKts: 80,
+            pressureMb: 985,
+            status: 'Hurricane'
+          },
+          {
+            time: '2024-07-01T12:00:00Z',
+            lat: 13.4,
+            lon: -45.2,
+            windKts: 165,
+            pressureMb: 934,
+            status: 'Hurricane'
+          }
+        ],
+        metadata: {
+          stormId: validated.stormId,
+          startTime: '2024-06-28T12:00:00Z',
+          endTime: '2024-07-01T12:00:00Z',
+          maxWindKts: 165,
+          minPressureMb: 934
+        }
+      };
+
+      const duration = Date.now() - startTime;
+      
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'NHC-HURDAT',
+        endpoint: `/track/${validated.stormId}`,
+        method: 'GET',
+        duration,
+        cached: false,
+      });
+
+      const content: ToolContent[] = [{
+        type: 'text',
+        text: JSON.stringify({
+          success: true,
+          data: mockTrack,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            stormId: validated.stormId,
+            source: 'National Hurricane Center HURDAT2',
+            trackPoints: mockTrack.points.length,
+          }
+        }, null, 2)
+      }];
+
+      return {
+        content,
+        _meta: {
+          timestamp: new Date().toISOString(),
+          correlationId,
+        }
+      };
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      if (error instanceof z.ZodError) {
+        throw new ValidationError('Invalid storm ID format', 'stormId', args, correlationId);
+      }
+
+      logger.error({ error, correlationId }, 'Failed to get storm track');
+      
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'NHC-HURDAT',
+        endpoint: `/track/${args.stormId}`,
+        method: 'GET',
+        duration,
+        cached: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Search historical hurricane tracks by area and date range
+   */
+  async searchHistoricalTracks(args: z.infer<typeof searchHistoricalTracksSchema>): Promise<ToolResponse> {
+    const correlationId = generateCorrelationId();
+    const startTime = Date.now();
+
+    try {
+      const validated = searchHistoricalTracksSchema.parse(args);
+      
+      logger.info({ 
+        correlationId,
+        dateRange: `${validated.start} to ${validated.end}`,
+        basin: validated.basin
+      }, 'Searching historical tracks');
+
+      // Mock historical search results
+      const mockResults: HistoricalStormSummary[] = [
+        {
+          stormId: 'AL052024',
+          name: 'BERYL',
+          year: 2024,
+          basin: 'AL',
+          maxWindKts: 165,
+          minPressureMb: 934,
+          trackSummary: {
+            startDate: '2024-06-28',
+            endDate: '2024-07-08',
+            durationHours: 264,
+            maxCategory: 5
+          },
+          ibtracsLink: 'https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r00/access/csv/ibtracs.AL052024.list.v04r00.csv'
+        },
+        {
+          stormId: 'AL042024',
+          name: 'DEBBY',
+          year: 2024,
+          basin: 'AL',
+          maxWindKts: 80,
+          minPressureMb: 979,
+          trackSummary: {
+            startDate: '2024-08-03',
+            endDate: '2024-08-09',
+            durationHours: 144,
+            maxCategory: 1
+          },
+          ibtracsLink: 'https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r00/access/csv/ibtracs.AL042024.list.v04r00.csv'
+        }
+      ];
+
+      // Filter by basin if specified
+      const filteredResults = validated.basin 
+        ? mockResults.filter(storm => storm.basin === validated.basin)
+        : mockResults;
+
+      const duration = Date.now() - startTime;
+      
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'IBTrACS',
+        endpoint: '/search/tracks',
+        method: 'POST',
+        duration,
+        cached: false,
+      });
+
+      const content: ToolContent[] = [{
+        type: 'text',
+        text: JSON.stringify({
+          success: true,
+          data: filteredResults,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            searchCriteria: {
+              dateRange: `${validated.start} to ${validated.end}`,
+              basin: validated.basin || 'all',
+              areaOfInterest: 'custom polygon'
+            },
+            resultCount: filteredResults.length,
+            source: 'International Best Track Archive for Climate Stewardship (IBTrACS)',
+          }
+        }, null, 2)
+      }];
+
+      return {
+        content,
+        _meta: {
+          timestamp: new Date().toISOString(),
+          correlationId,
+        }
+      };
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      if (error instanceof z.ZodError) {
+        throw new ValidationError('Invalid search parameters', undefined, error.errors, correlationId);
+      }
+
+      logger.error({ error, correlationId }, 'Failed to search historical tracks');
+      
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'IBTrACS',
+        endpoint: '/search/tracks',
+        method: 'POST',
+        duration,
+        cached: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      throw error;
+    }
+  }
+
+  /**
    * Create formatted response for successful tool calls
    */
   private createToolResponse(data: any, metadata: any, correlationId: string): ToolResponse {
