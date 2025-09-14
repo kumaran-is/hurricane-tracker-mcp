@@ -173,22 +173,42 @@ When testing with the prompt above, you should see:
    - No alerts for northern locations
 5. **Historical Search**: Results filtered by geography and date range
 
-## 🏗️ Project Architecture
+## 🏗️ SOLID Architecture
 
-### Core Components
-- **MCP Protocol Handler**: Full JSON-RPC 2.0 compliance
-- **Hurricane Service**: Real-time data integration with NOAA/NHC
-- **Structured Logging**: Production-grade logging with correlation IDs
-- **Error Handling**: LLM-friendly errors with recovery hints
-- **Type System**: Comprehensive TypeScript definitions
+The Hurricane Tracker MCP Server follows **SOLID principles** with clean separation of concerns:
+
+### **Layered Architecture**
+```
+server.ts (Infrastructure & Transport Management)
+    ↓
+hurricane-mcp-server.ts (MCP Protocol & Tool Orchestration)
+    ↓
+hurricane-service.ts (Business Logic & External API Integration)
+    ↓
+transports/ (Communication Layer: stdio, HTTP)
+```
+
+### **Core Components**
+- **server.ts**: Application entry point, transport management, lifecycle coordination
+- **hurricane-mcp-server.ts**: MCP protocol implementation, tool registry, JSON-RPC 2.0 compliance
+- **hurricane-service.ts**: Hurricane data processing, NOAA/NHC API integration, business logic
+- **transports/**: stdio transport (Cline) and Streamable HTTP transport (production)
+
+### **SOLID Principles Implementation**
+- **S**ingle Responsibility: Each file has one clear, focused purpose
+- **O**pen/Closed: Extensible through well-defined interfaces
+- **L**iskov Substitution: Proper inheritance and interface contracts
+- **I**nterface Segregation: Focused, specific interfaces for each layer
+- **D**ependency Inversion: High-level modules don't depend on low-level details
 
 ### Key Features
-- ✅ Production-ready architecture
-- ✅ Zero TypeScript compilation errors  
-- ✅ Enterprise-grade logging and monitoring
-- ✅ Comprehensive input validation
-- ✅ LLM-optimized responses
-- ✅ Real hurricane data models
+- ✅ **SOLID Architecture**: Clean separation of protocol, business, and transport concerns
+- ✅ **Dual Transport Support**: stdio (Cline) and Streamable HTTP (production/remote)
+- ✅ **Zero TypeScript compilation errors**  
+- ✅ **Enterprise-grade logging and monitoring**
+- ✅ **Comprehensive input validation and error handling**
+- ✅ **LLM-optimized responses with context management**
+- ✅ **Production-ready with proper lifecycle management**
 
 ## 🔧 Configuration
 

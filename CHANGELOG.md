@@ -5,6 +5,66 @@ All notable changes to the Hurricane Tracker MCP Server will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-09-14 (In Progress)
+
+### 🏗️ SOLID Architecture Refactoring
+
+**Major Architectural Improvement**: Refactoring the entire codebase to follow SOLID principles with proper separation of concerns.
+
+### ✅ Added
+- **hurricane-mcp-server.ts**: New protocol layer for MCP implementation & tool orchestration
+  - Complete MCP specification v2025-06-18 compliance
+  - JSON-RPC 2.0 message handling and protocol management
+  - Tool registry with proper schema validation
+  - MCP lifecycle events (initialize, initialized, shutdown)
+  - Protocol-level error handling with recovery hints
+  - Performance logging and monitoring for tool executions
+
+### 🔄 Changed - SOLID Architecture Implementation
+- **server.ts**: Refocused as infrastructure & transport management layer
+  - Application entry point and lifecycle coordination
+  - Transport selection and initialization
+  - Process-level error handling and graceful shutdown
+  - Removed MCP protocol code (moved to hurricane-mcp-server.ts)
+
+- **hurricane-service.ts**: Refactored to pure business logic & external API integration
+  - Hurricane data processing and API integration only
+  - Removed MCP protocol concerns (moved to hurricane-mcp-server.ts)
+  - Added missing methods: `getStormTrack()`, `searchHistoricalTracks()`
+  - Enhanced caching strategies and resilience patterns
+  - Returns plain JavaScript objects instead of MCP ToolResponse format
+
+- **Transport Layer Updates**:
+  - Updated stdio and HTTP transports to use `hurricaneMcpServer`
+  - Removed direct MCP server creation from transport classes
+  - Clean integration with new protocol layer
+
+### 🎯 SOLID Principles Implementation
+- **S**ingle Responsibility: Each file has one clear, focused purpose
+- **O**pen/Closed: Extensible through well-defined interfaces
+- **L**iskov Substitution: Proper inheritance and interface contracts  
+- **I**nterface Segregation: Focused, specific interfaces for each layer
+- **D**ependency Inversion: High-level modules don't depend on low-level details
+
+### 📊 New Architecture Overview
+```
+server.ts (Infrastructure & Transport Management)
+    ↓
+hurricane-mcp-server.ts (MCP Protocol & Tool Orchestration)
+    ↓  
+hurricane-service.ts (Business Logic & External API Integration)
+    ↓
+transports/ (Communication Layer: stdio, HTTP)
+```
+
+### 🔧 Pending Completion
+- Fix TypeScript compilation errors in hurricane-mcp-server.ts
+- Complete hurricane-service.ts refactoring (remove MCP protocol code)
+- Update transport classes to use new architecture
+- End-to-end testing of refactored architecture
+
+---
+
 ## [1.0.1] - 2025-09-14
 
 ### 🔧 Transport Modernization & Context7 Integration
