@@ -4,13 +4,10 @@
  */
 
 import { z } from 'zod';
-import { request } from 'undici';
 import { logger, performanceLogger } from './logger-pino.js';
 import { config } from './config/config.js';
 import { generateCorrelationId } from './logger-pino.js';
 import { 
-  UpstreamTimeoutError, 
-  UpstreamError, 
   NotFoundError,
   ValidationError 
 } from './errors/base-errors.js';
@@ -19,9 +16,7 @@ import type {
   StormCone,
   StormTrack,
   HurricaneAlert,
-  HistoricalStormSummary,
-  ToolResponse,
-  ToolContent
+  HistoricalStormSummary
 } from './types.js';
 
 // =============================================================================
@@ -65,7 +60,7 @@ export class HurricaneService {
   /**
    * Get all active tropical cyclones globally
    */
-  async getActiveStorms(args: z.infer<typeof getActiveStormsSchema>): Promise<ToolResponse> {
+  async getActiveStorms(args: {basin?: string}): Promise<HurricaneBasicInfo[]> {
     const correlationId = generateCorrelationId();
     const startTime = Date.now();
 
@@ -111,27 +106,8 @@ export class HurricaneService {
         cached: false,
       });
 
-      const content: ToolContent[] = [{
-        type: 'text',
-        text: JSON.stringify({
-          success: true,
-          data: filteredData,
-          metadata: {
-            timestamp: new Date().toISOString(),
-            basin: validated.basin || 'all',
-            totalStorms: filteredData.length,
-            source: 'National Hurricane Center',
-          }
-        }, null, 2)
-      }];
-
-      return {
-        content,
-        _meta: {
-          timestamp: new Date().toISOString(),
-          correlationId,
-        }
-      };
+      // Return plain business objects (SOLID: business layer returns domain objects)
+      return filteredData;
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -159,7 +135,7 @@ export class HurricaneService {
   /**
    * Get storm cone and forecast points
    */
-  async getStormCone(args: z.infer<typeof getStormConeSchema>): Promise<ToolResponse> {
+  async getStormCone(args: {stormId: string}): Promise<StormCone> {
     const correlationId = generateCorrelationId();
     const startTime = Date.now();
 
@@ -232,27 +208,8 @@ export class HurricaneService {
         cached: false,
       });
 
-      const content: ToolContent[] = [{
-        type: 'text',
-        text: JSON.stringify({
-          success: true,
-          data: mockCone,
-          metadata: {
-            timestamp: new Date().toISOString(),
-            stormId: validated.stormId,
-            source: 'National Hurricane Center GIS',
-            coneType: '5-day forecast cone',
-          }
-        }, null, 2)
-      }];
-
-      return {
-        content,
-        _meta: {
-          timestamp: new Date().toISOString(),
-          correlationId,
-        }
-      };
+      // Return plain business object (SOLID: business layer returns domain objects)
+      return mockCone;
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -280,7 +237,7 @@ export class HurricaneService {
   /**
    * Get historical hurricane alerts for a location
    */
-  async getLocalHurricaneAlerts(args: z.infer<typeof getLocalHurricaneAlertsSchema>): Promise<ToolResponse> {
+  async getLocalHurricaneAlerts(args: z.infer<typeof getLocalHurricaneAlertsSchema>): Promise<HurricaneAlert[]> {
     const correlationId = generateCorrelationId();
     const startTime = Date.now();
 
@@ -330,27 +287,8 @@ export class HurricaneService {
         cached: false,
       });
 
-      const content: ToolContent[] = [{
-        type: 'text', 
-        text: JSON.stringify({
-          success: true,
-          data: mockAlerts,
-          metadata: {
-            timestamp: new Date().toISOString(),
-            location: { lat: validated.lat, lon: validated.lon },
-            alertCount: mockAlerts.length,
-            source: 'National Weather Service',
-          }
-        }, null, 2)
-      }];
-
-      return {
-        content,
-        _meta: {
-          timestamp: new Date().toISOString(),
-          correlationId,
-        }
-      };
+      // Return plain business objects (SOLID: business layer returns domain objects)
+      return mockAlerts;
 
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -365,7 +303,7 @@ export class HurricaneService {
   /**
    * Get storm track data for a specific storm
    */
-  async getStormTrack(args: z.infer<typeof getStormTrackSchema>): Promise<ToolResponse> {
+  async getStormTrack(args: z.infer<typeof getStormTrackSchema>): Promise<StormTrack> {
     const correlationId = generateCorrelationId();
     const startTime = Date.now();
 
@@ -453,27 +391,8 @@ export class HurricaneService {
         cached: false,
       });
 
-      const content: ToolContent[] = [{
-        type: 'text',
-        text: JSON.stringify({
-          success: true,
-          data: mockTrack,
-          metadata: {
-            timestamp: new Date().toISOString(),
-            stormId: validated.stormId,
-            source: 'National Hurricane Center HURDAT2',
-            trackPoints: mockTrack.points.length,
-          }
-        }, null, 2)
-      }];
-
-      return {
-        content,
-        _meta: {
-          timestamp: new Date().toISOString(),
-          correlationId,
-        }
-      };
+      // Return plain business object (SOLID: business layer returns domain objects)
+      return mockTrack;
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -501,7 +420,7 @@ export class HurricaneService {
   /**
    * Search historical hurricane tracks by area and date range
    */
-  async searchHistoricalTracks(args: z.infer<typeof searchHistoricalTracksSchema>): Promise<ToolResponse> {
+  async searchHistoricalTracks(args: z.infer<typeof searchHistoricalTracksSchema>): Promise<HistoricalStormSummary[]> {
     const correlationId = generateCorrelationId();
     const startTime = Date.now();
 
@@ -564,31 +483,8 @@ export class HurricaneService {
         cached: false,
       });
 
-      const content: ToolContent[] = [{
-        type: 'text',
-        text: JSON.stringify({
-          success: true,
-          data: filteredResults,
-          metadata: {
-            timestamp: new Date().toISOString(),
-            searchCriteria: {
-              dateRange: `${validated.start} to ${validated.end}`,
-              basin: validated.basin || 'all',
-              areaOfInterest: 'custom polygon'
-            },
-            resultCount: filteredResults.length,
-            source: 'International Best Track Archive for Climate Stewardship (IBTrACS)',
-          }
-        }, null, 2)
-      }];
-
-      return {
-        content,
-        _meta: {
-          timestamp: new Date().toISOString(),
-          correlationId,
-        }
-      };
+      // Return plain business objects (SOLID: business layer returns domain objects)
+      return filteredResults;
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -613,82 +509,6 @@ export class HurricaneService {
     }
   }
 
-  /**
-   * Create formatted response for successful tool calls
-   */
-  private createToolResponse(data: any, metadata: any, correlationId: string): ToolResponse {
-    return {
-      content: [{
-        type: 'text',
-        text: JSON.stringify({
-          success: true,
-          data,
-          metadata: {
-            ...metadata,
-            timestamp: new Date().toISOString(),
-          }
-        }, null, 2)
-      }],
-      _meta: {
-        timestamp: new Date().toISOString(),
-        correlationId,
-      }
-    };
-  }
-
-  /**
-   * Estimate token count for response optimization
-   */
-  private estimateTokens(data: any): number {
-    // Simple token estimation: ~4 chars per token
-    const jsonString = JSON.stringify(data);
-    return Math.ceil(jsonString.length / 4);
-  }
-
-  /**
-   * Create and configure an MCP server instance with hurricane tools
-   */
-  async createMCPServer() {
-    const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js');
-    
-    const server = new McpServer({
-      name: 'hurricane-tracker-mcp',
-      version: '1.0.0',
-    });
-
-    // Register hurricane tracking tools
-    server.registerTool(
-      'get_active_storms',
-      {
-        title: 'Get Active Storms',
-        description: 'List all active tropical cyclones globally with key metadata and links',
-        inputSchema: getActiveStormsSchema,
-      },
-      async (args: any) => this.getActiveStorms(args)
-    );
-
-    server.registerTool(
-      'get_storm_cone', 
-      {
-        title: 'Get Storm Cone',
-        description: 'Get cone of uncertainty and forecast points for a specific storm',
-        inputSchema: getStormConeSchema,
-      },
-      async (args: any) => this.getStormCone(args)
-    );
-
-    server.registerTool(
-      'get_local_hurricane_alerts',
-      {
-        title: 'Get Local Hurricane Alerts', 
-        description: 'Get active hurricane-related alerts for a specific location',
-        inputSchema: getLocalHurricaneAlertsSchema,
-      },
-      async (args: any) => this.getLocalHurricaneAlerts(args)
-    );
-
-    return server;
-  }
 }
 
 export const hurricaneService = new HurricaneService();
