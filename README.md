@@ -6,9 +6,9 @@ A production-grade Model Context Protocol (MCP) server that provides real-time h
 
 ### Prerequisites
 
-- Node.js 22.0.0 or higher
-- npm or yarn package manager
-- Cline (Claude for VS Code) or other MCP-compatible AI assistant
+- **Node.js 22.x** or higher
+- **npm** or **yarn** package manager
+- **Cline (Claude for VS Code)** or other **MCP-compatible AI assistant**
 
 ### 1. Installation & Setup
 
@@ -56,38 +56,58 @@ After adding the configuration, restart Cline to load the Hurricane Tracker MCP 
 
 ### 4. Test All Hurricane Tools
 
-Copy and paste this comprehensive test prompt into Cline:
+Copy and paste these test prompts into Cline (each section separately):
 
+**Main Test Request:**
 ```
 I need to track hurricane activity and get comprehensive information. Please help me test all the hurricane tracking capabilities:
+```
 
-1. **Get Active Storms**: First, show me all currently active tropical cyclones globally, then filter specifically for Atlantic basin storms.
+**Test 1 - Active Storms:**
+```
+First, show me all currently active tropical cyclones globally, then filter specifically for Atlantic basin storms using get_active_storms.
+```
 
-2. **Storm Cone Analysis**: For storm AL052024, get the forecast cone of uncertainty and show me the 5-day forecast track with wind speeds and pressure data.
+**Test 2 - Storm Cone Analysis:**
+```
+For storm AL052024, get the forecast cone of uncertainty and show me the 5-day forecast track with wind speeds and pressure data using get_storm_cone.
+```
 
-3. **Historical Track**: Get the historical track data for the same storm (AL052024) to see where it has been.
+**Test 3 - Historical Track:**
+```
+Get the historical track data for storm AL052024 to see where it has been using get_storm_track.
+```
 
-4. **Local Alerts**: Check for hurricane alerts at these locations:
-   - Miami, FL area: latitude 25.76, longitude -80.19
-   - New Orleans, LA area: latitude 29.95, longitude -90.07
-   - A location outside hurricane zones: latitude 45.0, longitude -75.0 (to test no alerts)
+**Test 4 - Local Alerts:**
+```
+Check for hurricane alerts at these locations using get_local_hurricane_alerts:
+- Miami, FL area: latitude 25.76, longitude -80.19
+- New Orleans, LA area: latitude 29.95, longitude -90.07  
+- A location outside hurricane zones: latitude 45.0, longitude -75.0 (to test no alerts)
+```
 
-5. **Historical Search**: Search for historical hurricane tracks in the Gulf of Mexico region from 2020-2024. Use this area of interest (GeoJSON Polygon):
-   ```
-   {
-     "type": "Polygon", 
-     "coordinates": [[
-       [-95.0, 25.0],
-       [-85.0, 25.0],
-       [-85.0, 31.0],
-       [-95.0, 31.0],
-       [-95.0, 25.0]
-     ]]
-   }
-   ```
-   Search from 2020-01-01 to 2024-12-31, filtering for Atlantic basin storms.
+**Test 5 - Historical Search:**
+```
+Search for historical hurricane tracks in the Gulf of Mexico region from 2020-2024 using search_historical_tracks. Use this area of interest (GeoJSON Polygon):
+```
 
-Please run all these tests and show me the structured responses, including any error handling for invalid inputs.
+**GeoJSON Polygon for Test 5:**
+```json
+{
+  "type": "Polygon", 
+  "coordinates": [[
+    [-95.0, 25.0],
+    [-85.0, 25.0],
+    [-85.0, 31.0],
+    [-95.0, 31.0],
+    [-95.0, 25.0]
+  ]]
+}
+```
+
+**Final Test Instructions:**
+```
+Search from 2020-01-01 to 2024-12-31, filtering for Atlantic basin storms. Please run all these tests and show me the structured responses, including any error handling for invalid inputs.
 ```
 
 ## 🌀 Available Hurricane Tools
@@ -124,6 +144,13 @@ Gets historical track data showing where a storm has been.
 **Parameters:**
 - `stormId` (required): Storm identifier (e.g., "AL052024")
 
+**Example:**
+```json
+{
+  "stormId": "AL052024"
+}
+```
+
 ### 4. `get_local_hurricane_alerts`
 Retrieves active hurricane alerts for a specific location.
 
@@ -147,6 +174,25 @@ Searches historical hurricane tracks by area and date range.
 - `start` (required): Start date (YYYY-MM-DD format)
 - `end` (required): End date (YYYY-MM-DD format)
 - `basin` (optional): Filter by basin code
+
+**Example:**
+```json
+{
+  "aoi": {
+    "type": "Polygon",
+    "coordinates": [[[
+      [-95.0, 25.0],
+      [-85.0, 25.0],
+      [-85.0, 31.0],
+      [-95.0, 31.0],
+      [-95.0, 25.0]
+    ]]]
+  },
+  "start": "2020-01-01",
+  "end": "2024-12-31",
+  "basin": "AL"
+}
+```
 
 ## 🔧 Development Commands
 
@@ -225,10 +271,28 @@ npm run build
 ```
 
 ### Tools Not Working in Cline
-1. Verify the MCP configuration path is correct
-2. Restart Cline after adding the configuration
-3. Check the server logs for errors
-4. Ensure the server is running: `npm run stdio`
+
+**Step 1 - Verify Configuration:**
+```bash
+# Check the MCP configuration path is correct in cline_mcp_settings.json
+```
+
+**Step 2 - Restart Cline:**
+```bash
+# Restart Cline after adding the configuration
+```
+
+**Step 3 - Check Server Logs:**
+```bash
+# Check the server logs for errors
+npm run stdio
+```
+
+**Step 4 - Verify Server is Running:**
+```bash
+# Ensure the server is running
+npm run stdio
+```
 
 ### No Hurricane Data
 The current implementation uses realistic mock data for demonstration. Real API integration will be added in Phase 4.
