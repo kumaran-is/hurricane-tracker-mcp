@@ -6,6 +6,7 @@
 import { config, getConfigSummary } from './config/config.js';
 import { logger, healthLogger } from './logger-pino.js';
 import { StdioTransport } from './transports/stdio-transport.js';
+import { HttpTransport } from './transports/http-transport.js';
 
 // =============================================================================
 // SERVER STARTUP
@@ -26,8 +27,8 @@ async function main() {
       'Starting Hurricane Tracker MCP Server'
     );
 
-    // Create and start transport
-    const transport = new StdioTransport();
+    // Create transport based on configuration
+    const transport = createTransport(config.transport.type);
     await transport.start();
 
     const startupTime = Date.now() - startTime;
@@ -57,7 +58,19 @@ async function main() {
   }
 }
 
-async function shutdown(transport: StdioTransport) {
+function createTransport(transportType: 'stdio' | 'http') {
+  switch (transportType) {
+    case 'stdio':
+      return new StdioTransport();
+    case 'http':
+      return new HttpTransport();
+    default:
+      logger.warn(`Unknown transport type: ${transportType}, using stdio`);
+      return new StdioTransport();
+  }
+}
+
+async function shutdown(transport: StdioTransport | HttpTransport) {
   logger.info('Shutting down Hurricane Tracker MCP Server');
   
   try {

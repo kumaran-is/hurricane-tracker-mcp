@@ -243,6 +243,54 @@ export const performanceLogger = {
   },
 
   /**
+   * Log HTTP request details
+   */
+  httpRequest(data: {
+    correlationId: string;
+    method: string;
+    url: string;
+    userAgent: string;
+    ip: string;
+  }) {
+    logger.debug(
+      {
+        event: 'http_request',
+        correlationId: data.correlationId,
+        method: data.method,
+        url: data.url,
+        userAgent: data.userAgent,
+        ip: data.ip,
+      },
+      `HTTP ${data.method} ${data.url}`
+    );
+  },
+
+  /**
+   * Log HTTP response details
+   */
+  httpResponse(data: {
+    correlationId: string;
+    method: string;
+    url: string;
+    statusCode: number;
+    responseTime: number;
+  }) {
+    const logLevel = data.statusCode >= 400 ? 'warn' : 'debug';
+    
+    logger[logLevel](
+      {
+        event: 'http_response',
+        correlationId: data.correlationId,
+        method: data.method,
+        url: data.url,
+        statusCode: data.statusCode,
+        responseTimeMs: data.responseTime,
+      },
+      `HTTP ${data.method} ${data.url} ${data.statusCode}`
+    );
+  },
+
+  /**
    * Log system performance metrics
    */
   systemMetrics(data: {

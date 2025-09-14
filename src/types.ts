@@ -308,9 +308,14 @@ export interface IBTrACSRecord {
 
 export interface HurricaneTrackerConfig {
   transport: {
-    type: 'stdio' | 'http' | 'sse';
+    type: 'stdio' | 'http';
     port?: number;
     host?: string;
+    httpPort?: number;
+    httpHost?: string;
+    httpCors?: {
+      allowedOrigins: string[];
+    };
   };
   dataSources: {
     nws: {
@@ -483,7 +488,7 @@ export interface HealthStatus {
 // =============================================================================
 
 export interface TransportConfig {
-  type: 'stdio' | 'http' | 'sse';
+  type: 'stdio' | 'http';
   options?: {
     port?: number;
     host?: string;

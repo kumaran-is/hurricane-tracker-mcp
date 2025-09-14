@@ -16,7 +16,7 @@ dotenvConfig();
 
 const envSchema = z.object({
   // Transport Configuration
-  MCP_TRANSPORT: z.enum(['stdio', 'http', 'sse']).default('stdio'),
+  MCP_TRANSPORT: z.enum(['stdio', 'http']).default('stdio'),
   HTTP_PORT: z.coerce.number().min(1).max(65535).default(8080),
   HTTP_HOST: z.string().default('localhost'),
 
@@ -120,6 +120,11 @@ export const config: HurricaneTrackerConfig = {
     type: env.MCP_TRANSPORT,
     port: env.HTTP_PORT,
     host: env.HTTP_HOST,
+    httpPort: env.HTTP_PORT,
+    httpHost: env.HTTP_HOST,
+    httpCors: {
+      allowedOrigins: ['http://localhost:3000', 'http://localhost:8080'],
+    },
   },
   dataSources: {
     nws: {

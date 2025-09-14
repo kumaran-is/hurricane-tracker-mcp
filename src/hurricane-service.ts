@@ -393,6 +393,51 @@ export class HurricaneService {
     const jsonString = JSON.stringify(data);
     return Math.ceil(jsonString.length / 4);
   }
+
+  /**
+   * Create and configure an MCP server instance with hurricane tools
+   */
+  async createMCPServer() {
+    const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js');
+    
+    const server = new McpServer({
+      name: 'hurricane-tracker-mcp',
+      version: '1.0.0',
+    });
+
+    // Register hurricane tracking tools
+    server.registerTool(
+      'get_active_storms',
+      {
+        title: 'Get Active Storms',
+        description: 'List all active tropical cyclones globally with key metadata and links',
+        inputSchema: getActiveStormsSchema,
+      },
+      async (args: any) => this.getActiveStorms(args)
+    );
+
+    server.registerTool(
+      'get_storm_cone', 
+      {
+        title: 'Get Storm Cone',
+        description: 'Get cone of uncertainty and forecast points for a specific storm',
+        inputSchema: getStormConeSchema,
+      },
+      async (args: any) => this.getStormCone(args)
+    );
+
+    server.registerTool(
+      'get_local_hurricane_alerts',
+      {
+        title: 'Get Local Hurricane Alerts', 
+        description: 'Get active hurricane-related alerts for a specific location',
+        inputSchema: getLocalHurricaneAlertsSchema,
+      },
+      async (args: any) => this.getLocalHurricaneAlerts(args)
+    );
+
+    return server;
+  }
 }
 
 export const hurricaneService = new HurricaneService();
