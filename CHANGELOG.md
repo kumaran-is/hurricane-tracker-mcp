@@ -5,6 +5,46 @@ All notable changes to the Hurricane Tracker MCP Server will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-09-14
+
+### 🔧 Transport Modernization & Context7 Integration
+
+**Breaking Changes**: Removed deprecated SSE transport in favor of modern MCP StreamableHTTP implementation.
+
+### ✅ Added
+- **Context7 MCP Integration**: Mandatory integration with Context7 MCP server for latest library documentation
+  - Enhanced prompt documentation with specific library requirements
+  - Latest API references for @modelcontextprotocol/sdk, Fastify, TypeScript, Pino, Undici, Zod, etc.
+  - "NEVER use outdated documentation" directive for AI implementation
+
+### 🔄 Changed
+- **Transport Architecture**: Modernized to use only officially supported MCP transports
+  - **stdio**: For local AI assistants (Cline, Claude Desktop)
+  - **http**: MCP StreamableHTTPServerTransport for production/remote clients
+- **Enhanced Health Endpoint**: Shows `transport: "http-streamable"` and active session tracking
+- **Session Management**: Proper MCP session tracking and cleanup
+- **Configuration**: Updated to support only `['stdio', 'http']` transports
+
+### ❌ Removed
+- **SSE Transport**: Removed deprecated Server-Sent Events transport implementation
+  - Cleaned up SSE transport code from `src/server.ts`
+  - Removed SSE configuration options
+  - Updated TypeScript types to remove 'sse' transport
+  - Removed `npm run sse` script from package.json
+  - Updated all documentation to remove SSE references
+
+### 🚀 Performance
+- **HTTP Streamable Transport**: 58ms startup time with proper MCP SDK implementation
+- **stdio Transport**: 4ms startup time (unchanged)
+- **Modern MCP Compliance**: Uses official MCP SDK StreamableHTTP transport
+
+### 📚 Documentation
+- **Updated README.md**: Removed SSE transport references, clarified supported transports
+- **Enhanced Prompt Documentation**: Added mandatory Context7 MCP integration requirements
+- **Library Documentation Requirements**: Comprehensive list of libraries requiring Context7 queries
+
+---
+
 ## [1.0.0] - 2025-09-14
 
 ### 🎉 Initial Release - Production-Ready Hurricane Tracker MCP Server

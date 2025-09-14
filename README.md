@@ -194,7 +194,7 @@ When testing with the prompt above, you should see:
 
 The server supports extensive configuration through environment variables. See `.env.example` for all available options:
 
-- **Transport**: stdio, Streamable HTTP, or sse
+- **Transport**: stdio or Streamable HTTP
 - **Logging**: Configurable levels and formats
 - **Performance**: Timeout, retry, and cache settings
 - **Security**: Rate limiting and input validation
