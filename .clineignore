@@ -1,0 +1,61 @@
+# Monorepo root .clineignore
+
+# Dependencies (all projects)
+node_modules/
+.pnp
+.pnp.js
+.yarn/
+.npm/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs (all projects)
+.next/
+out/
+dist/
+build/
+
+# Logs (all projects)
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache and temporary files
+.cache/
+.parcel-cache/
+.swc/
+.turbo/
+tmp/
+temp/
+
+# Testing
+coverage/
+.jest/
+
+# OS files
+.DS_Store
+**/.DS_Store
+**/Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+
+# Monorepo tools
+.turbo/
+.rush/
+lerna-debug.log
+
+# Root level configs (optional - uncomment if you want to exclude)
+# package.json
+# turbo.json
+# nx.json
+# lerna.json
+# rush.json
