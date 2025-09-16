@@ -345,8 +345,16 @@ export interface HurricaneTrackerConfig {
     connectionTimeoutMs: number;
   };
   security: {
+    authEnabled: boolean;
+    apiKeys: string[];
+    sessionTimeout: number;
+    allowedOrigins: string;
     rateLimitPerClient: number;
     rateLimitWindowMs: number;
+    rateLimitEnabled: boolean;
+    rateLimitBurst: number;
+    rateLimitBlockDuration: number;
+    rateLimitWhitelist: string[];
     maxRequestSizeBytes: number;
     enableAuditLogging: boolean;
     enableInputSanitization: boolean;
