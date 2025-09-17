@@ -58,53 +58,50 @@ After adding the configuration, restart Cline to load the Hurricane Tracker MCP 
 
 ### 4. Test All Hurricane Tools
 
-**Copy and paste these test prompts into Cline to test all 5 hurricane tools with real data patterns:**
+**Copy and paste these natural language prompts into Cline to test hurricane tracking capabilities:**
 
-#### **Quick Test - All Tools:**
+#### **Quick Test - All Capabilities:**
 ```
-Test all hurricane tracking tools with real data integration:
+I need a comprehensive hurricane status report:
 
-1. Get active storms globally: get_active_storms
-2. Get current hurricane alerts for Miami: get_local_hurricane_alerts with lat 25.76, lon -80.19
-3. Search historical Gulf of Mexico storms: search_historical_tracks with area polygon [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]], dates 2020-01-01 to 2024-12-31
-4. If any active storms are found in step 1, test storm cone: get_storm_cone with stormId from active storms
-5. If any active storms are found in step 1, test storm track: get_storm_track with stormId from active storms
+1. Show me all active tropical storms and hurricanes worldwide
+2. Check if Miami has any current hurricane warnings or watches  
+3. Find all hurricanes that passed through the Gulf of Mexico between 2020 and 2024
+4. If there are any active storms, show me their forecast path and uncertainty cone
+5. For any active storms, also show their historical track so far
 
-Show me all responses including real API calls, data parsing, and error handling. If no active storms exist, the cone/track tools will demonstrate proper error handling for unavailable real data.
-```
-
-#### **Individual Tool Tests:**
-
-**Test 1 - Active Storms (Real NOAA NHC API):**
-```
-Show me all active tropical cyclones using get_active_storms (calls real NOAA NHC CurrentStorms.json), then filter for Atlantic basin only with basin="AL"
+Please include all available data from weather services.
 ```
 
-**Test 2 - Storm Forecast Cone (Real NOAA GIS Integration):**
+#### **Individual Test Scenarios:**
+
+**Test 1 - Current Storm Activity:**
 ```
-First get active storms, then use any active storm ID for get_storm_cone (attempts real NOAA GIS KMZ file access). If no active storms, this will demonstrate proper error handling for unavailable real data sources.
+What tropical storms and hurricanes are currently active around the world? I'm particularly interested in any storms in the Atlantic basin.
 ```
 
-**Test 3 - Storm Historical Track (Real HURDAT2 Database):**
+**Test 2 - Storm Forecast Information:**
 ```
-First get active storms, then use any active storm ID for get_storm_track (attempts real HURDAT2 database connectivity). If no active storms, this will demonstrate proper error handling for unavailable real data sources.
-```
-
-**Test 4 - Location-Based Alerts (Real NWS API):**
-```
-Check hurricane alerts for these coordinates using get_local_hurricane_alerts (calls real NWS api.weather.gov):
-- Miami, FL: lat=25.76, lon=-80.19
-- New Orleans, LA: lat=29.95, lon=-90.07
-- Houston, TX: lat=29.76, lon=-95.37
-- Test invalid coordinates: lat=95, lon=200 (should show validation error)
+Are there any active hurricanes right now? If so, I'd like to see the forecast cone showing where the storm might go over the next 5 days.
 ```
 
-**Test 5 - Historical Search (Real IBTrACS CSV Parsing):**
+**Test 3 - Storm Movement History:**
 ```
-Search for historical hurricane tracks using search_historical_tracks (parses real IBTrACS CSV data):
-- Area: GeoJSON polygon covering Gulf of Mexico [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]]
-- Date range: 2020-01-01 to 2024-12-31
-- Basin filter: "AL" for Atlantic
+Can you show me the path that any currently active hurricanes have taken so far? I want to see where they've been.
+```
+
+**Test 4 - Location-Specific Alerts:**
+```
+Please check these cities for any hurricane-related warnings or watches:
+- Miami, Florida
+- New Orleans, Louisiana  
+- Houston, Texas
+Also test what happens with invalid coordinates like latitude 95, longitude 200.
+```
+
+**Test 5 - Historical Hurricane Data:**
+```
+I'm researching hurricanes in the Gulf of Mexico. Can you find all storms that passed through the Gulf between January 2020 and December 2024? Focus on Atlantic basin storms.
 ```
 
 #### **Expected Real Data Behavior:**
