@@ -5,7 +5,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { logger, performanceLogger, generateCorrelationId } from './logger-pino.js';
+import { logger, performanceLogger, generateCorrelationId } from './logging/logger-pino.js';
 import { hurricaneService } from './hurricane-service.js';
 import { 
   NotFoundError, 

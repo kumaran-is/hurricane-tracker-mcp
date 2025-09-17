@@ -8,7 +8,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import fastify from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { config, getConfigSummary } from './config/config.js';
-import { logger, healthLogger } from './logger-pino.js';
+import { logger, healthLogger } from './logging/logger-pino.js';
 import { hurricaneMcpServer } from './hurricane-mcp-server.js';
 
 // =============================================================================

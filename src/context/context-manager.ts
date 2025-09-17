@@ -3,7 +3,7 @@
  * Optimizes responses for different context window sizes and LLM requirements
  */
 
-import { logger } from '../logger-pino.js';
+import { logger } from '../logging/logger-pino.js';
 
 export interface ContextLimits {
   maxInputTokens: number;

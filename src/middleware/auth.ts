@@ -3,7 +3,7 @@
  * Handles API key validation and user authentication
  */
 
-import { logger } from '../logger-pino.js';
+import { logger } from '../logging/logger-pino.js';
 
 export interface AuthConfig {
   enabled: boolean;

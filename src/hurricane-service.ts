@@ -4,9 +4,9 @@
  */
 
 import { z } from 'zod';
-import { logger, performanceLogger } from './logger-pino.js';
+import { logger, performanceLogger } from './logging/logger-pino.js';
 import { config } from './config/config.js';
-import { generateCorrelationId } from './logger-pino.js';
+import { generateCorrelationId } from './logging/logger-pino.js';
 import { 
   NotFoundError,
   ValidationError 

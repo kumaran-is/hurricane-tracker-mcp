@@ -3,7 +3,7 @@
  * Implements token bucket and sliding window algorithms
  */
 
-import { logger } from '../logger-pino.js';
+import { logger } from '../logging/logger-pino.js';
 
 export interface RateLimitConfig {
   enabled: boolean;

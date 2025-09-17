@@ -3,7 +3,7 @@
  * Provides comprehensive audit trails for security and compliance requirements
  */
 
-import { logger } from '../logger-pino.js';
+import { logger } from '../logging/logger-pino.js';
 import { EventEmitter } from 'events';
 
 export interface AuditEvent {

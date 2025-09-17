@@ -4,7 +4,7 @@
  */
 
 import { LRUCache } from 'lru-cache';
-import { logger } from '../logger-pino.js';
+import { logger } from '../logging/logger-pino.js';
 import { CacheError } from '../errors/base-errors.js';
 import type { 
   ActiveHurricane,
