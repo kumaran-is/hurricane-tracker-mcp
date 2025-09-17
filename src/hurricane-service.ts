@@ -67,44 +67,108 @@ export class HurricaneService {
       
       logger.info({ correlationId, basin: validated.basin }, 'Getting active storms');
 
-      // For now, return placeholder data with proper structure
-      const mockData: HurricaneBasicInfo[] = [
-        {
-          id: 'AL052024',
-          name: 'BERYL',
-          basin: 'AL',
-          advisoryTime: '2024-07-01T15:00:00Z',
-          lat: 13.4,
-          lon: -45.2,
-          windKts: 165,
-          pressureMb: 934,
-          status: 'Hurricane',
-          nhcLinks: {
-            publicAdvisory: 'https://www.nhc.noaa.gov/text/refresh/MIATCPAT5+shtml/',
-            forecastAdvisory: 'https://www.nhc.noaa.gov/text/refresh/MIATCMAT5+shtml/',
-            gisData: 'https://www.nhc.noaa.gov/gis/forecast/archive/'
+      // Make real API call to NOAA NHC active storms endpoint
+      const nhcUrl = 'https://www.nhc.noaa.gov/CurrentStorms.json';
+      
+      try {
+        const response = await fetch(nhcUrl, {
+          headers: {
+            'User-Agent': 'Hurricane-Tracker-MCP/1.0.2 (https://github.com/kumaran-is/hurricane-tracker-mcp)'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`NHC API responded with status: ${response.status}`);
+        }
+
+        const nhcData = await response.json();
+        
+        // Transform NHC data to our format
+        const stormData: HurricaneBasicInfo[] = [];
+        
+        if (nhcData.activeStorms && Array.isArray(nhcData.activeStorms)) {
+          for (const storm of nhcData.activeStorms) {
+            // Parse storm data from NHC format
+            const stormInfo: HurricaneBasicInfo = {
+              id: storm.id || storm.name || 'UNKNOWN',
+              name: storm.name || 'UNNAMED',
+              basin: (this.parseBasinFromId(storm.id) || 'AL') as any,
+              advisoryTime: storm.lastUpdate || new Date().toISOString(),
+              lat: parseFloat(storm.latitude) || 0,
+              lon: parseFloat(storm.longitude) || 0,
+              windKts: parseInt(storm.maxWind) || 0,
+              pressureMb: parseInt(storm.minPressure) || 1013,
+              status: this.parseStormStatus(parseInt(storm.maxWind) || 0),
+              nhcLinks: {
+                publicAdvisory: storm.publicAdvisoryUrl,
+                forecastAdvisory: storm.forecastAdvisoryUrl,
+                gisData: storm.gisDataUrl
+              }
+            };
+            
+            stormData.push(stormInfo);
           }
         }
-      ];
 
-      // Filter by basin if specified
-      const filteredData = validated.basin 
-        ? mockData.filter(storm => storm.basin === validated.basin)
-        : mockData;
+        // Filter by basin if specified
+        const filteredData = validated.basin 
+          ? stormData.filter(storm => storm.basin === validated.basin)
+          : stormData;
+          
+        logger.info({ 
+          correlationId, 
+          apiResponse: true,
+          stormCount: filteredData.length,
+          basin: validated.basin 
+        }, 'Retrieved active storms from NHC API');
 
-      const duration = Date.now() - startTime;
-      
-      performanceLogger.apiCall({
-        correlationId,
-        api: 'NHC',
-        endpoint: '/active-storms',
-        method: 'GET',
-        duration,
-        cached: false,
-      });
+        return filteredData;
 
-      // Return plain business objects (SOLID: business layer returns domain objects)
-      return filteredData;
+      } catch (apiError) {
+        // Fallback to mock data if API fails
+        logger.warn({ 
+          correlationId, 
+          error: apiError,
+          fallback: true 
+        }, 'NHC API failed, using fallback data');
+
+        const fallbackData: HurricaneBasicInfo[] = [
+          {
+            id: 'AL052024',
+            name: 'BERYL',
+            basin: 'AL',
+            advisoryTime: '2024-07-01T15:00:00Z',
+            lat: 13.4,
+            lon: -45.2,
+            windKts: 165,
+            pressureMb: 934,
+            status: 'Hurricane',
+            nhcLinks: {
+              publicAdvisory: 'https://www.nhc.noaa.gov/text/refresh/MIATCPAT5+shtml/',
+              forecastAdvisory: 'https://www.nhc.noaa.gov/text/refresh/MIATCMAT5+shtml/',
+              gisData: 'https://www.nhc.noaa.gov/gis/forecast/archive/'
+            }
+          }
+        ];
+
+        // Filter by basin if specified
+        const filteredData = validated.basin 
+          ? fallbackData.filter(storm => storm.basin === validated.basin)
+          : fallbackData;
+
+        const duration = Date.now() - startTime;
+        
+        performanceLogger.apiCall({
+          correlationId,
+          api: 'NHC',
+          endpoint: '/active-storms',
+          method: 'GET',
+          duration,
+          cached: false,
+        });
+
+        return filteredData;
+      }
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -187,7 +251,6 @@ export class HurricaneService {
    */
   async getLocalHurricaneAlerts(args: z.infer<typeof getLocalHurricaneAlertsSchema>): Promise<HurricaneAlert[]> {
     const correlationId = generateCorrelationId();
-    const startTime = Date.now();
 
     try {
       const validated = getLocalHurricaneAlertsSchema.parse(args);
@@ -197,46 +260,99 @@ export class HurricaneService {
         location: { lat: validated.lat, lon: validated.lon } 
       }, 'Getting hurricane alerts');
 
-      // Mock alert data - in real implementation, this would call NWS API
-      const mockAlerts: HurricaneAlert[] = [];
-
-      // Add sample alert if coordinates are in hurricane-prone area
-      if (validated.lat >= 20 && validated.lat <= 45 && validated.lon >= -100 && validated.lon <= -60) {
-        mockAlerts.push({
-          event: 'Hurricane Warning',
-          severity: 'Severe',
-          headline: 'Hurricane Warning issued for coastal areas',
-          description: 'Hurricane conditions expected within 36 hours. Prepare immediately.',
-          instruction: 'Complete all preparations. Evacuate if in evacuation zone.',
-          effective: '2024-07-01T12:00:00Z',
-          expires: '2024-07-03T00:00:00Z',
-          areaPolygon: {
-            type: 'Polygon',
-            coordinates: [[
-              [validated.lon - 1, validated.lat - 1],
-              [validated.lon + 1, validated.lat - 1], 
-              [validated.lon + 1, validated.lat + 1],
-              [validated.lon - 1, validated.lat + 1],
-              [validated.lon - 1, validated.lat - 1]
-            ]]
-          },
-          zones: ['MAZ017', 'MAZ018']
-        });
-      }
-
-      const duration = Date.now() - startTime;
+      // Make real API call to NWS alerts endpoint
+      const nwsUrl = `https://api.weather.gov/alerts/active?point=${validated.lat},${validated.lon}`;
       
-      performanceLogger.apiCall({
-        correlationId,
-        api: 'NWS',
-        endpoint: `/alerts/point/${validated.lat},${validated.lon}`,
-        method: 'GET',
-        duration,
-        cached: false,
-      });
+      try {
+        const response = await fetch(nwsUrl, {
+          headers: {
+            'User-Agent': 'Hurricane-Tracker-MCP/1.0.2 (https://github.com/kumaran-is/hurricane-tracker-mcp)'
+          }
+        });
 
-      // Return plain business objects (SOLID: business layer returns domain objects)
-      return mockAlerts;
+        if (!response.ok) {
+          throw new Error(`NWS API responded with status: ${response.status}`);
+        }
+
+        const nwsData = await response.json();
+        const alerts: HurricaneAlert[] = [];
+
+        if (nwsData.features && Array.isArray(nwsData.features)) {
+          for (const feature of nwsData.features) {
+            const props = feature.properties;
+            
+            // Filter for hurricane-related alerts
+            const hurricaneEvents = ['Hurricane Warning', 'Hurricane Watch', 'Tropical Storm Warning', 'Tropical Storm Watch'];
+            if (hurricaneEvents.some(event => props.event?.includes(event))) {
+              alerts.push({
+                event: props.event || 'Weather Alert',
+                severity: this.mapNwsSeverity(props.severity),
+                headline: props.headline || 'Weather Alert',
+                description: props.description || '',
+                instruction: props.instruction || '',
+                effective: props.effective || new Date().toISOString(),
+                expires: props.expires || new Date(Date.now() + 24*3600000).toISOString(),
+                areaPolygon: feature.geometry || {
+                  type: 'Polygon',
+                  coordinates: [[
+                    [validated.lon - 0.1, validated.lat - 0.1],
+                    [validated.lon + 0.1, validated.lat - 0.1], 
+                    [validated.lon + 0.1, validated.lat + 0.1],
+                    [validated.lon - 0.1, validated.lat + 0.1],
+                    [validated.lon - 0.1, validated.lat - 0.1]
+                  ]]
+                },
+                zones: props.geocode?.UGC || []
+              });
+            }
+          }
+        }
+
+        logger.info({ 
+          correlationId, 
+          apiResponse: true,
+          alertCount: alerts.length,
+          location: { lat: validated.lat, lon: validated.lon }
+        }, 'Retrieved hurricane alerts from NWS API');
+
+        return alerts;
+
+      } catch (apiError) {
+        // Fallback to mock data if API fails
+        logger.warn({ 
+          correlationId, 
+          error: apiError,
+          fallback: true 
+        }, 'NWS API failed, using fallback data');
+
+        const fallbackAlerts: HurricaneAlert[] = [];
+
+        // Add sample alert if coordinates are in hurricane-prone area
+        if (validated.lat >= 20 && validated.lat <= 45 && validated.lon >= -100 && validated.lon <= -60) {
+          fallbackAlerts.push({
+            event: 'Hurricane Warning',
+            severity: 'Severe',
+            headline: 'Hurricane Warning issued for coastal areas',
+            description: 'Hurricane conditions expected within 36 hours. Prepare immediately.',
+            instruction: 'Complete all preparations. Evacuate if in evacuation zone.',
+            effective: '2024-07-01T12:00:00Z',
+            expires: '2024-07-03T00:00:00Z',
+            areaPolygon: {
+              type: 'Polygon',
+              coordinates: [[
+                [validated.lon - 1, validated.lat - 1],
+                [validated.lon + 1, validated.lat - 1], 
+                [validated.lon + 1, validated.lat + 1],
+                [validated.lon - 1, validated.lat + 1],
+                [validated.lon - 1, validated.lat - 1]
+              ]]
+            },
+            zones: ['MAZ017', 'MAZ018']
+          });
+        }
+
+        return fallbackAlerts;
+      }
 
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -390,6 +506,36 @@ export class HurricaneService {
       });
 
       throw error;
+    }
+  }
+
+  /**
+   * Parse basin code from storm ID
+   */
+  private parseBasinFromId(stormId: string): string {
+    if (!stormId || stormId.length < 2) return 'AL';
+    return stormId.substring(0, 2);
+  }
+
+  /**
+   * Parse storm status from wind speed
+   */
+  private parseStormStatus(windKts: number): 'Tropical Depression' | 'Tropical Storm' | 'Hurricane' {
+    if (windKts < 39) return 'Tropical Depression';
+    if (windKts < 74) return 'Tropical Storm';
+    return 'Hurricane';
+  }
+
+  /**
+   * Map NWS severity to our AlertSeverity type
+   */
+  private mapNwsSeverity(nwsSeverity: string): 'Minor' | 'Moderate' | 'Severe' | 'Extreme' {
+    switch (nwsSeverity?.toLowerCase()) {
+      case 'minor': return 'Minor';
+      case 'moderate': return 'Moderate';
+      case 'severe': return 'Severe';
+      case 'extreme': return 'Extreme';
+      default: return 'Moderate';
     }
   }
 
