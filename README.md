@@ -65,12 +65,12 @@ After adding the configuration, restart Cline to load the Hurricane Tracker MCP 
 Test all hurricane tracking tools with real data integration:
 
 1. Get active storms globally: get_active_storms
-2. Get storm cone for AL052024: get_storm_cone with stormId "AL052024"  
-3. Get storm track for AL052024: get_storm_track with stormId "AL052024"
-4. Get alerts for Miami: get_local_hurricane_alerts with lat 25.76, lon -80.19
-5. Search Gulf of Mexico: search_historical_tracks with area polygon [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]], dates 2024-01-01 to 2024-12-31
+2. Get current hurricane alerts for Miami: get_local_hurricane_alerts with lat 25.76, lon -80.19
+3. Search historical Gulf of Mexico storms: search_historical_tracks with area polygon [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]], dates 2020-01-01 to 2024-12-31
+4. If any active storms are found in step 1, test storm cone: get_storm_cone with stormId from active storms
+5. If any active storms are found in step 1, test storm track: get_storm_track with stormId from active storms
 
-Show me all responses including real API calls, data parsing, and error handling.
+Show me all responses including real API calls, data parsing, and error handling. If no active storms exist, the cone/track tools will demonstrate proper error handling for unavailable real data.
 ```
 
 #### **Individual Tool Tests:**
@@ -82,12 +82,12 @@ Show me all active tropical cyclones using get_active_storms (calls real NOAA NH
 
 **Test 2 - Storm Forecast Cone (Real NOAA GIS Integration):**
 ```
-Get the forecast cone and 5-day track for storm AL052024 using get_storm_cone (attempts real NOAA GIS KMZ file access)
+First get active storms, then use any active storm ID for get_storm_cone (attempts real NOAA GIS KMZ file access). If no active storms, this will demonstrate proper error handling for unavailable real data sources.
 ```
 
 **Test 3 - Storm Historical Track (Real HURDAT2 Database):**
 ```
-Get the historical track data for storm AL052024 using get_storm_track (attempts real HURDAT2 database connectivity)
+First get active storms, then use any active storm ID for get_storm_track (attempts real HURDAT2 database connectivity). If no active storms, this will demonstrate proper error handling for unavailable real data sources.
 ```
 
 **Test 4 - Location-Based Alerts (Real NWS API):**
@@ -193,7 +193,8 @@ curl -X POST http://localhost:3000/mcp \
 
 **Tool 4: Get Storm Cone (Real NOAA GIS Integration)**
 ```bash
-# Hurricane Beryl 2024 (attempts real NOAA GIS KMZ access)
+# Use any current active storm ID from get_active_storms result
+# Example: If AL012025 is currently active
 curl -X POST http://localhost:3000/mcp \
   -H "Content-Type: application/json" \
   -d '{
@@ -202,14 +203,18 @@ curl -X POST http://localhost:3000/mcp \
     "method": "tools/call",
     "params": {
       "name": "get_storm_cone",
-      "arguments": {"stormId": "AL052024"}
+      "arguments": {"stormId": "AL012025"}
     }
   }'
+
+# Note: Replace "AL012025" with actual storm ID from current active storms
+# If no active storms, this will properly return error for unavailable real data
 ```
 
 **Tool 5: Get Storm Track (Real HURDAT2 Database)**
 ```bash
-# Hurricane Beryl 2024 track (attempts real HURDAT2 connectivity)
+# Use any current active storm ID from get_active_storms result  
+# Example: If AL012025 is currently active
 curl -X POST http://localhost:3000/mcp \
   -H "Content-Type: application/json" \
   -d '{
@@ -218,9 +223,12 @@ curl -X POST http://localhost:3000/mcp \
     "method": "tools/call",
     "params": {
       "name": "get_storm_track",
-      "arguments": {"stormId": "AL052024"}
+      "arguments": {"stormId": "AL012025"}
     }
   }'
+
+# Note: Replace "AL012025" with actual storm ID from current active storms
+# If no active storms, this will properly return error for unavailable real data
 ```
 
 #### **Expected Real Data Behavior:**
@@ -249,8 +257,8 @@ All tools now use **true real data patterns** like the weather server:
 | Tool | Description | Required Parameters | Optional Parameters | Example Usage |
 |------|-------------|-------------------|-------------------|---------------|
 | `get_active_storms` | Lists all active tropical cyclones globally | None | `basin` (AL, EP, CP, WP, NP, SP, SI) | Get Atlantic storms: `{"basin": "AL"}` |
-| `get_storm_cone` | Forecast cone of uncertainty & 5-day track | `stormId` (e.g., "AL052024") | None | `{"stormId": "AL052024"}` |
-| `get_storm_track` | Historical track data for a storm | `stormId` (e.g., "AL052024") | None | `{"stormId": "AL052024"}` |
+| `get_storm_cone` | Forecast cone of uncertainty & 5-day track | `stormId` (from active storms) | None | `{"stormId": "AL012025"}` |
+| `get_storm_track` | Historical track data for a storm | `stormId` (from active storms) | None | `{"stormId": "AL012025"}` |
 | `get_local_hurricane_alerts` | Active hurricane alerts by location | `lat` (-90 to 90)<br>`lon` (-180 to 180) | None | Miami: `{"lat": 25.76, "lon": -80.19}` |
 | `search_historical_tracks` | Historical tracks by area & date | `aoi` (GeoJSON Polygon)<br>`start` (YYYY-MM-DD)<br>`end` (YYYY-MM-DD) | `basin` (AL, EP, etc.) | Gulf search: See detailed example below |
 
@@ -298,12 +306,12 @@ npm run lint
 When testing with the prompt above, you should see:
 
 1. **Active Storms**: Structured JSON with storm data, basin filtering works
-2. **Storm Cone**: GeoJSON polygon and forecast points for AL052024
-3. **Storm Track**: Historical track capability confirmation
+2. **Storm Cone**: GeoJSON polygon and forecast points for any active storm (or proper error if none active)
+3. **Storm Track**: Historical track capability confirmation for any active storm (or proper error if none active)
 4. **Local Alerts**: 
-   - Hurricane warnings for Miami/New Orleans areas
-   - No alerts for northern locations
-5. **Historical Search**: Results filtered by geography and date range
+   - Hurricane warnings for Miami/New Orleans areas when storms are nearby
+   - No alerts for northern locations or when no storms are active
+5. **Historical Search**: Results filtered by geography and date range from real IBTrACS data
 
 ## 🏗️ SOLID Architecture ✅ **REFACTORING COMPLETE**
 
