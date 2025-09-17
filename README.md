@@ -58,11 +58,11 @@ After adding the configuration, restart Cline to load the Hurricane Tracker MCP 
 
 ### 4. Test All Hurricane Tools
 
-**Copy and paste these test prompts into Cline to test all 5 hurricane tools:**
+**Copy and paste these test prompts into Cline to test all 5 hurricane tools with real data patterns:**
 
 #### **Quick Test - All Tools:**
 ```
-Test all hurricane tracking tools:
+Test all hurricane tracking tools with real data integration:
 
 1. Get active storms globally: get_active_storms
 2. Get storm cone for AL052024: get_storm_cone with stormId "AL052024"  
@@ -70,48 +70,179 @@ Test all hurricane tracking tools:
 4. Get alerts for Miami: get_local_hurricane_alerts with lat 25.76, lon -80.19
 5. Search Gulf of Mexico: search_historical_tracks with area polygon [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]], dates 2024-01-01 to 2024-12-31
 
-Show me all responses including any mock data and error handling.
+Show me all responses including real API calls, data parsing, and error handling.
 ```
 
 #### **Individual Tool Tests:**
 
-**Test 1 - Active Storms:**
+**Test 1 - Active Storms (Real NOAA NHC API):**
 ```
-Show me all active tropical cyclones using get_active_storms, then filter for Atlantic basin only with basin="AL"
-```
-
-**Test 2 - Storm Forecast Cone:**
-```
-Get the forecast cone and 5-day track for storm AL052024 using get_storm_cone
+Show me all active tropical cyclones using get_active_storms (calls real NOAA NHC CurrentStorms.json), then filter for Atlantic basin only with basin="AL"
 ```
 
-**Test 3 - Storm Historical Track:**
+**Test 2 - Storm Forecast Cone (Real NOAA GIS Integration):**
 ```
-Get the historical track data for storm AL052024 using get_storm_track
+Get the forecast cone and 5-day track for storm AL052024 using get_storm_cone (attempts real NOAA GIS KMZ file access)
 ```
 
-**Test 4 - Location-Based Alerts:**
+**Test 3 - Storm Historical Track (Real HURDAT2 Database):**
 ```
-Check hurricane alerts for these coordinates using get_local_hurricane_alerts:
+Get the historical track data for storm AL052024 using get_storm_track (attempts real HURDAT2 database connectivity)
+```
+
+**Test 4 - Location-Based Alerts (Real NWS API):**
+```
+Check hurricane alerts for these coordinates using get_local_hurricane_alerts (calls real NWS api.weather.gov):
 - Miami, FL: lat=25.76, lon=-80.19
 - New Orleans, LA: lat=29.95, lon=-90.07
+- Houston, TX: lat=29.76, lon=-95.37
 - Test invalid coordinates: lat=95, lon=200 (should show validation error)
 ```
 
-**Test 5 - Historical Search:**
+**Test 5 - Historical Search (Real IBTrACS CSV Parsing):**
 ```
-Search for historical hurricane tracks in the Gulf of Mexico using search_historical_tracks with:
-- Area: GeoJSON polygon covering coordinates [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]]
-- Date range: 2024-01-01 to 2024-12-31
+Search for historical hurricane tracks using search_historical_tracks (parses real IBTrACS CSV data):
+- Area: GeoJSON polygon covering Gulf of Mexico [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]]
+- Date range: 2020-01-01 to 2024-12-31
 - Basin filter: "AL" for Atlantic
 ```
 
+#### **Real Data Integration Test Commands (cURL Examples):**
+
+**Tool 1: Get Active Storms (Real NOAA NHC API)**
+```bash
+# Get all active storms worldwide (calls real NOAA API)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "get_active_storms",
+      "arguments": {}
+    }
+  }'
+
+# Get Atlantic storms only
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "get_active_storms",
+      "arguments": {"basin": "AL"}
+    }
+  }'
+```
+
+**Tool 2: Get Hurricane Alerts (Real NWS API)**
+```bash
+# Miami, Florida alerts (calls real NWS API)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "get_local_hurricane_alerts",
+      "arguments": {"lat": 25.7617, "lon": -80.1918}
+    }
+  }'
+
+# New Orleans, Louisiana alerts
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/call",
+    "params": {
+      "name": "get_local_hurricane_alerts",
+      "arguments": {"lat": 29.9511, "lon": -90.0715}
+    }
+  }'
+```
+
+**Tool 3: Search Historical Tracks (Real IBTrACS CSV Parsing)**
+```bash
+# Search Gulf of Mexico region (parses real CSV data)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "tools/call",
+    "params": {
+      "name": "search_historical_tracks",
+      "arguments": {
+        "aoi": {
+          "type": "Polygon",
+          "coordinates": [[[-97.0, 25.0], [-80.0, 25.0], [-80.0, 31.0], [-97.0, 31.0], [-97.0, 25.0]]]
+        },
+        "start": "2020-06-01",
+        "end": "2024-11-30",
+        "basin": "AL"
+      }
+    }
+  }'
+```
+
+**Tool 4: Get Storm Cone (Real NOAA GIS Integration)**
+```bash
+# Hurricane Beryl 2024 (attempts real NOAA GIS KMZ access)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "tools/call",
+    "params": {
+      "name": "get_storm_cone",
+      "arguments": {"stormId": "AL052024"}
+    }
+  }'
+```
+
+**Tool 5: Get Storm Track (Real HURDAT2 Database)**
+```bash
+# Hurricane Beryl 2024 track (attempts real HURDAT2 connectivity)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "tools/call",
+    "params": {
+      "name": "get_storm_track",
+      "arguments": {"stormId": "AL052024"}
+    }
+  }'
+```
+
+#### **Expected Real Data Behavior:**
+
+All tools now use **true real data patterns** like the weather server:
+
+- ✅ **Active Storms**: Calls real NOAA NHC API → returns parsed live data or empty array if API unavailable
+- ✅ **Hurricane Alerts**: Calls real NWS API → returns filtered live alerts or empty array if API unavailable  
+- ✅ **Historical Search**: Parses real IBTrACS CSV data → returns parsed storms or empty array if parsing fails
+- ✅ **Storm Cone**: Attempts real NOAA GIS API → throws error if cone data unavailable from real sources
+- ✅ **Storm Track**: Attempts real HURDAT2 database → throws error if track data unavailable from real sources
+
+**No hardcoded fallback data** - the server returns real API responses or appropriate errors, never synthetic mock data.
+
 #### **Expected Results:**
-- ✅ **JSON responses** with storm data, forecasts, tracks, and alerts
-- ✅ **Validation errors** for invalid inputs (helpful for testing)
-- ✅ **Mock data** with realistic hurricane information
-- ✅ **Correlation IDs** and performance metadata
-- ✅ **Clean error messages** with helpful hints
+- ✅ **Real API responses** from NOAA/NWS/IBTrACS when available
+- ✅ **Empty arrays** when APIs are temporarily unavailable (no hardcoded fallbacks)
+- ✅ **Appropriate errors** when real data sources are unavailable (storm cone/track)
+- ✅ **CSV parsing logs** showing successful IBTrACS data extraction
+- ✅ **Validation errors** for invalid inputs with helpful messages
+- ✅ **Correlation IDs** and performance metadata for all API calls
+- ✅ **Clean error messages** with recovery hints
 
 ## 🌀 Available Hurricane Tools
 
