@@ -130,31 +130,10 @@ export class HurricaneService {
           correlationId, 
           error: apiError,
           fallback: true 
-        }, 'NHC API failed, using fallback data');
+        }, 'NHC API failed, returning empty results - no hardcoded fallback data');
 
-        const fallbackData: HurricaneBasicInfo[] = [
-          {
-            id: 'AL052024',
-            name: 'BERYL',
-            basin: 'AL',
-            advisoryTime: '2024-07-01T15:00:00Z',
-            lat: 13.4,
-            lon: -45.2,
-            windKts: 165,
-            pressureMb: 934,
-            status: 'Hurricane',
-            nhcLinks: {
-              publicAdvisory: 'https://www.nhc.noaa.gov/text/refresh/MIATCPAT5+shtml/',
-              forecastAdvisory: 'https://www.nhc.noaa.gov/text/refresh/MIATCMAT5+shtml/',
-              gisData: 'https://www.nhc.noaa.gov/gis/forecast/archive/'
-            }
-          }
-        ];
-
-        // Filter by basin if specified
-        const filteredData = validated.basin 
-          ? fallbackData.filter(storm => storm.basin === validated.basin)
-          : fallbackData;
+        // Return empty array when API fails - no hardcoded fallback data
+        const filteredData: HurricaneBasicInfo[] = [];
 
         const duration = Date.now() - startTime;
         
@@ -240,9 +219,7 @@ export class HurricaneService {
         }, 'GIS data not available, using generated cone');
       }
 
-      // Generate realistic cone data (fallback or supplement to real data)
-      const mockCone = this.generateMockStormCone(validated.stormId);
-
+      // Return error when real data not available - no mock generation
       const duration = Date.now() - startTime;
       
       performanceLogger.apiCall({
@@ -252,10 +229,10 @@ export class HurricaneService {
         method: 'GET',
         duration,
         cached: false,
+        error: 'Storm cone data not available from real sources'
       });
 
-      // Return plain business object (SOLID: business layer returns domain objects)
-      return mockCone;
+      throw new Error(`Storm cone data not available for storm ${validated.stormId} from real sources`);
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -357,35 +334,10 @@ export class HurricaneService {
           correlationId, 
           error: apiError,
           fallback: true 
-        }, 'NWS API failed, using fallback data');
+        }, 'NWS API failed, returning empty results - no hardcoded fallback data');
 
-        const fallbackAlerts: HurricaneAlert[] = [];
-
-        // Add sample alert if coordinates are in hurricane-prone area
-        if (validated.lat >= 20 && validated.lat <= 45 && validated.lon >= -100 && validated.lon <= -60) {
-          fallbackAlerts.push({
-            event: 'Hurricane Warning',
-            severity: 'Severe',
-            headline: 'Hurricane Warning issued for coastal areas',
-            description: 'Hurricane conditions expected within 36 hours. Prepare immediately.',
-            instruction: 'Complete all preparations. Evacuate if in evacuation zone.',
-            effective: '2024-07-01T12:00:00Z',
-            expires: '2024-07-03T00:00:00Z',
-            areaPolygon: {
-              type: 'Polygon',
-              coordinates: [[
-                [validated.lon - 1, validated.lat - 1],
-                [validated.lon + 1, validated.lat - 1], 
-                [validated.lon + 1, validated.lat + 1],
-                [validated.lon - 1, validated.lat + 1],
-                [validated.lon - 1, validated.lat - 1]
-              ]]
-            },
-            zones: ['MAZ017', 'MAZ018']
-          });
-        }
-
-        return fallbackAlerts;
+        // Return empty array when API fails - no hardcoded fallback data
+        return [];
       }
 
     } catch (error) {
@@ -440,9 +392,7 @@ export class HurricaneService {
         }, 'HURDAT2 data not available, using generated track');
       }
 
-      // Generate realistic track data (fallback or supplement to real data)
-      const mockTrack = this.generateMockStormTrack(validated.stormId);
-
+      // Return error when real data not available - no mock generation
       const duration = Date.now() - startTime;
       
       performanceLogger.apiCall({
@@ -452,10 +402,10 @@ export class HurricaneService {
         method: 'GET',
         duration,
         cached: false,
+        error: 'Storm track data not available from real sources'
       });
 
-      // Return plain business object (SOLID: business layer returns domain objects)
-      return mockTrack;
+      throw new Error(`Storm track data not available for storm ${validated.stormId} from real sources`);
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -566,26 +516,10 @@ export class HurricaneService {
         logger.warn({ 
           correlationId, 
           error: ibtracsError 
-        }, 'IBTrACS data parsing failed, generating realistic data');
+        }, 'IBTrACS data parsing failed, returning empty results - no fallback data');
         
-        // Generate realistic historical data as fallback
-        historicalResults = [
-          {
-            stormId: 'AL052024',
-            name: 'BERYL',
-            year: 2024,
-            basin: 'AL',
-            maxWindKts: 165,
-            minPressureMb: 934,
-            trackSummary: {
-              startDate: '2024-06-28',
-              endDate: '2024-07-08',
-              durationHours: 264,
-              maxCategory: 5
-            },
-            ibtracsLink: 'https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r00/access/csv/ibtracs.AL052024.list.v04r00.csv'
-          }
-        ];
+        // Return empty array when API fails - no hardcoded fallback data
+        historicalResults = [];
       }
 
       // Filter by basin if specified
@@ -660,144 +594,7 @@ export class HurricaneService {
     }
   }
 
-  /**
-   * Generate mock storm cone data for any storm ID
-   */
-  private generateMockStormCone(stormId: string): StormCone {
-    // Extract basin and storm number for varied mock data
-    const basin = stormId.substring(0, 2);
-    const stormNum = parseInt(stormId.substring(2, 4));
-    
-    // Vary location based on basin
-    let baseLat: number, baseLon: number;
-    if (basin === 'AL') {
-      baseLat = 15 + (stormNum % 15); // Atlantic: 15-30°N
-      baseLon = -40 - (stormNum % 40); // Atlantic: -40 to -80°W
-    } else if (basin === 'EP') {
-      baseLat = 12 + (stormNum % 10); // E Pacific: 12-22°N  
-      baseLon = -105 - (stormNum % 25); // E Pacific: -105 to -130°W
-    } else {
-      baseLat = 20; // Default
-      baseLon = -70;
-    }
-    
-    // Vary wind speeds based on storm number
-    const windSpeed = 80 + (stormNum % 85); // 80-165 kts
-    const pressure = 1000 - (stormNum % 70); // 930-1000 mb
-    
-    return {
-      cone: {
-        type: 'Polygon',
-        coordinates: [[
-          [baseLon, baseLat],
-          [baseLon + 2, baseLat + 1],
-          [baseLon + 4, baseLat + 3],
-          [baseLon + 2, baseLat + 5],
-          [baseLon - 2, baseLat + 4],
-          [baseLon - 3, baseLat + 2],
-          [baseLon, baseLat]
-        ]]
-      },
-      forecastPoints: [
-        {
-          time: new Date(Date.now() + 6 * 3600000).toISOString(),
-          lat: baseLat + 0.5,
-          lon: baseLon + 1,
-          windKts: windSpeed - 5,
-          pressureMb: pressure + 5
-        },
-        {
-          time: new Date(Date.now() + 24 * 3600000).toISOString(),
-          lat: baseLat + 1.5,
-          lon: baseLon + 3,
-          windKts: windSpeed - 10,
-          pressureMb: pressure + 10
-        },
-        {
-          time: new Date(Date.now() + 48 * 3600000).toISOString(),
-          lat: baseLat + 3,
-          lon: baseLon + 5,
-          windKts: windSpeed - 20,
-          pressureMb: pressure + 20
-        }
-      ],
-      metadata: {
-        stormId,
-        advisoryTime: new Date().toISOString(),
-        forecastHours: [6, 12, 24, 36, 48, 72, 96, 120]
-      }
-    };
-  }
-
-  /**
-   * Generate mock storm track data for any storm ID
-   */
-  private generateMockStormTrack(stormId: string): StormTrack {
-    // Extract basin and storm number for varied mock data
-    const basin = stormId.substring(0, 2);
-    const stormNum = parseInt(stormId.substring(2, 4));
-    
-    // Vary starting location based on basin
-    let startLat: number, startLon: number;
-    if (basin === 'AL') {
-      startLat = 10 + (stormNum % 10);
-      startLon = -30 - (stormNum % 30);
-    } else if (basin === 'EP') {
-      startLat = 8 + (stormNum % 8);
-      startLon = -95 - (stormNum % 20);
-    } else {
-      startLat = 15;
-      startLon = -50;
-    }
-    
-    // Generate track points
-    const trackPoints = [];
-    const coordinates = [];
-    const windSpeed = 40 + (stormNum % 125); // 40-165 kts
-    
-    for (let i = 0; i < 5; i++) {
-      const lat = startLat + i * 0.5;
-      const lon = startLon - i * 1.2;
-      const time = new Date(Date.now() - (4 - i) * 24 * 3600000).toISOString();
-      const winds = Math.min(windSpeed + i * 20, 165);
-      const pressure = Math.max(1000 - i * 15, 920);
-      
-      let status: 'Tropical Depression' | 'Tropical Storm' | 'Hurricane';
-      if (winds < 39) {
-        status = 'Tropical Depression';
-      } else if (winds < 74) {
-        status = 'Tropical Storm';
-      } else {
-        status = 'Hurricane';
-      }
-      
-      trackPoints.push({
-        time,
-        lat,
-        lon,
-        windKts: winds,
-        pressureMb: pressure,
-        status
-      });
-      
-      coordinates.push([lon, lat]);
-    }
-    
-    return {
-      track: {
-        type: 'LineString',
-        coordinates
-      },
-      points: trackPoints,
-      metadata: {
-        stormId,
-        startTime: trackPoints[0].time,
-        endTime: trackPoints[trackPoints.length - 1].time,
-        maxWindKts: Math.max(...trackPoints.map(p => p.windKts)),
-        minPressureMb: Math.min(...trackPoints.map(p => p.pressureMb))
-      }
-    };
-  }
+  // No mock data generation methods - only real API data sources
 
 }
 
