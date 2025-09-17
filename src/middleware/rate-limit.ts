@@ -208,7 +208,7 @@ export class RateLimitMiddleware {
       return this.allowRequest(remaining, resetTime);
 
     } catch (error) {
-      logger.error('Error in rate limiting check', { identifier, ip, error });
+      logger.error({ identifier, ip, error }, 'Error in rate limiting check');
       
       if (this.config.skipIfError) {
         return this.allowRequest(this.config.requestsPerWindow);
@@ -257,11 +257,11 @@ export class RateLimitMiddleware {
     const blockUntil = Date.now() + this.config.blockDuration;
     this.blockedIPs.set(ip, blockUntil);
     
-    logger.warn('IP blocked due to rate limit violation', {
+    logger.warn({
       ip,
       blockDurationMs: this.config.blockDuration,
       blockUntil: new Date(blockUntil).toISOString(),
-    });
+    }, 'IP blocked due to rate limit violation');
   }
 
   /**
@@ -305,7 +305,6 @@ export class RateLimitMiddleware {
     }
 
     // Clean up inactive buckets (older than 2x window size)
-    const inactiveThreshold = now - (this.config.windowSizeMs * 2);
     for (const [identifier, bucket] of this.buckets.entries()) {
       if (bucket.getTokens() === this.config.burstAllowance && 
           !this.windows.has(identifier)) {
@@ -317,11 +316,11 @@ export class RateLimitMiddleware {
     // Windows clean themselves automatically
 
     if (cleanedBuckets > 0 || cleanedWindows > 0 || cleanedBlocks > 0) {
-      logger.debug('Rate limit middleware cleanup completed', {
+      logger.debug({
         cleanedBuckets,
         cleanedWindows,
         cleanedBlocks,
-      });
+      }, 'Rate limit middleware cleanup completed');
     }
   }
 
@@ -348,7 +347,7 @@ export class RateLimitMiddleware {
   resetLimits(identifier: string): void {
     this.buckets.delete(identifier);
     this.windows.delete(identifier);
-    logger.info('Rate limits reset for identifier', { identifier });
+    logger.info({ identifier }, 'Rate limits reset for identifier');
   }
 
   /**
@@ -359,7 +358,7 @@ export class RateLimitMiddleware {
     this.blockedIPs.delete(ip);
     
     if (wasBlocked) {
-      logger.info('IP unblocked manually', { ip });
+      logger.info({ ip }, 'IP unblocked manually');
     }
     
     return wasBlocked;

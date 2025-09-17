@@ -5,8 +5,8 @@
 
 import pino from 'pino';
 import { v4 as uuidv4 } from 'uuid';
-import { config, getEnvironmentConfig } from './config/config.js';
-import type { RequestContext } from './types.js';
+import { config, getEnvironmentConfig } from '../config/config.js';
+import type { RequestContext } from '../types.js';
 
 // =============================================================================
 // LOGGER CONFIGURATION

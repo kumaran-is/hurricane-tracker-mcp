@@ -4,7 +4,7 @@
  */
 
 import { SecurityManager, validateInputSize } from '../security/sanitizer.js';
-import { logger } from '../logger-pino.js';
+import { logger } from '../logging/logger-pino.js';
 
 /**
  * Sanitization middleware factory

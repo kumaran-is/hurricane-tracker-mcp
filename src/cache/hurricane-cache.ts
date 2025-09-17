@@ -91,8 +91,8 @@ export class HurricaneCache {
       ttl: this.config.currentHurricaneTTL,
       updateAgeOnGet: this.config.updateAgeOnGet,
       updateAgeOnHas: this.config.updateAgeOnHas,
-      dispose: (value, key) => {
-        logger.debug('Evicting current hurricane cache entry', { key });
+      dispose: (_value, key) => {
+        logger.debug({ key }, 'Evicting current hurricane cache entry');
       },
     });
 
@@ -102,8 +102,8 @@ export class HurricaneCache {
       ttl: this.config.forecastTTL,
       updateAgeOnGet: this.config.updateAgeOnGet,
       updateAgeOnHas: this.config.updateAgeOnHas,
-      dispose: (value, key) => {
-        logger.debug('Evicting forecast cache entry', { key });
+      dispose: (_value, key) => {
+        logger.debug({ key }, 'Evicting forecast cache entry');
       },
     });
 
@@ -113,8 +113,8 @@ export class HurricaneCache {
       ttl: this.config.alertTTL,
       updateAgeOnGet: this.config.updateAgeOnGet,
       updateAgeOnHas: this.config.updateAgeOnHas,
-      dispose: (value, key) => {
-        logger.debug('Evicting alert cache entry', { key });
+      dispose: (_value, key) => {
+        logger.debug({ key }, 'Evicting alert cache entry');
       },
     });
 
@@ -124,8 +124,8 @@ export class HurricaneCache {
       ttl: this.config.trackTTL,
       updateAgeOnGet: this.config.updateAgeOnGet,
       updateAgeOnHas: this.config.updateAgeOnHas,
-      dispose: (value, key) => {
-        logger.debug('Evicting track cache entry', { key });
+      dispose: (_value, key) => {
+        logger.debug({ key }, 'Evicting track cache entry');
       },
     });
 
@@ -135,8 +135,8 @@ export class HurricaneCache {
       ttl: this.config.historicalTTL,
       updateAgeOnGet: this.config.updateAgeOnGet,
       updateAgeOnHas: this.config.updateAgeOnHas,
-      dispose: (value, key) => {
-        logger.debug('Evicting historical cache entry', { key });
+      dispose: (_value, key) => {
+        logger.debug({ key }, 'Evicting historical cache entry');
       },
     });
 
@@ -146,12 +146,12 @@ export class HurricaneCache {
       ttl: this.config.geocodingTTL,
       updateAgeOnGet: this.config.updateAgeOnGet,
       updateAgeOnHas: this.config.updateAgeOnHas,
-      dispose: (value, key) => {
-        logger.debug('Evicting geocoding cache entry', { key });
+      dispose: (_value, key) => {
+        logger.debug({ key }, 'Evicting geocoding cache entry');
       },
     });
 
-    logger.info('Hurricane cache initialized', { config: this.config });
+    logger.info({ config: this.config }, 'Hurricane cache initialized');
   }
 
   // =============================================================================
@@ -203,15 +203,15 @@ export class HurricaneCache {
 
       if (data) {
         this.stats.currentHurricanes.hits++;
-        logger.debug('Current hurricanes cache hit', { key });
+        logger.debug({ key }, 'Current hurricanes cache hit');
       } else {
         this.stats.currentHurricanes.misses++;
-        logger.debug('Current hurricanes cache miss', { key });
+        logger.debug({ key }, 'Current hurricanes cache miss');
       }
 
       return data;
     } catch (error) {
-      logger.error('Error getting current hurricanes from cache', { error });
+      logger.error({ error }, 'Error getting current hurricanes from cache');
       throw new CacheError('Failed to get current hurricanes from cache', 'get');
     }
   }
@@ -221,9 +221,9 @@ export class HurricaneCache {
       const key = this.getCurrentHurricanesKey();
       this.currentHurricaneCache.set(key, data);
       this.stats.currentHurricanes.sets++;
-      logger.debug('Current hurricanes cached', { key, count: data.length });
+      logger.debug({ key, count: data.length }, 'Current hurricanes cached');
     } catch (error) {
-      logger.error('Error setting current hurricanes in cache', { error });
+      logger.error({ error }, 'Error setting current hurricanes in cache');
       throw new CacheError('Failed to set current hurricanes in cache', 'set');
     }
   }
@@ -239,15 +239,15 @@ export class HurricaneCache {
 
       if (data) {
         this.stats.forecasts.hits++;
-        logger.debug('Forecast cache hit', { hurricaneId, key });
+        logger.debug({ hurricaneId, key }, 'Forecast cache hit');
       } else {
         this.stats.forecasts.misses++;
-        logger.debug('Forecast cache miss', { hurricaneId, key });
+        logger.debug({ hurricaneId, key }, 'Forecast cache miss');
       }
 
       return data;
     } catch (error) {
-      logger.error('Error getting forecast from cache', { hurricaneId, error });
+      logger.error({ hurricaneId, error }, 'Error getting forecast from cache');
       throw new CacheError('Failed to get forecast from cache', 'get');
     }
   }
@@ -257,9 +257,9 @@ export class HurricaneCache {
       const key = this.getForecastKey(hurricaneId);
       this.forecastCache.set(key, data);
       this.stats.forecasts.sets++;
-      logger.debug('Forecast cached', { hurricaneId, key });
+      logger.debug({ hurricaneId, key }, 'Forecast cached');
     } catch (error) {
-      logger.error('Error setting forecast in cache', { hurricaneId, error });
+      logger.error({ hurricaneId, error }, 'Error setting forecast in cache');
       throw new CacheError('Failed to set forecast in cache', 'set');
     }
   }
@@ -275,15 +275,15 @@ export class HurricaneCache {
 
       if (data) {
         this.stats.alerts.hits++;
-        logger.debug('Alerts cache hit', { location, key });
+        logger.debug({ location, key }, 'Alerts cache hit');
       } else {
         this.stats.alerts.misses++;
-        logger.debug('Alerts cache miss', { location, key });
+        logger.debug({ location, key }, 'Alerts cache miss');
       }
 
       return data;
     } catch (error) {
-      logger.error('Error getting alerts from cache', { location, error });
+      logger.error({ location, error }, 'Error getting alerts from cache');
       throw new CacheError('Failed to get alerts from cache', 'get');
     }
   }
@@ -293,9 +293,9 @@ export class HurricaneCache {
       const key = this.getAlertsKey(location);
       this.alertCache.set(key, data);
       this.stats.alerts.sets++;
-      logger.debug('Alerts cached', { location, key, count: data.length });
+      logger.debug({ location, key, count: data.length }, 'Alerts cached');
     } catch (error) {
-      logger.error('Error setting alerts in cache', { location, error });
+      logger.error({ location, error }, 'Error setting alerts in cache');
       throw new CacheError('Failed to set alerts in cache', 'set');
     }
   }
@@ -311,15 +311,15 @@ export class HurricaneCache {
 
       if (data) {
         this.stats.tracks.hits++;
-        logger.debug('Track cache hit', { hurricaneId, key });
+        logger.debug({ hurricaneId, key }, 'Track cache hit');
       } else {
         this.stats.tracks.misses++;
-        logger.debug('Track cache miss', { hurricaneId, key });
+        logger.debug({ hurricaneId, key }, 'Track cache miss');
       }
 
       return data;
     } catch (error) {
-      logger.error('Error getting track from cache', { hurricaneId, error });
+      logger.error({ hurricaneId, error }, 'Error getting track from cache');
       throw new CacheError('Failed to get track from cache', 'get');
     }
   }
@@ -329,9 +329,9 @@ export class HurricaneCache {
       const key = this.getTrackKey(hurricaneId);
       this.trackCache.set(key, data);
       this.stats.tracks.sets++;
-      logger.debug('Track cached', { hurricaneId, key });
+      logger.debug({ hurricaneId, key }, 'Track cached');
     } catch (error) {
-      logger.error('Error setting track in cache', { hurricaneId, error });
+      logger.error({ hurricaneId, error }, 'Error setting track in cache');
       throw new CacheError('Failed to set track in cache', 'set');
     }
   }
@@ -352,15 +352,15 @@ export class HurricaneCache {
 
       if (data) {
         this.stats.historical.hits++;
-        logger.debug('Historical cache hit', { query, key });
+        logger.debug({ query, key }, 'Historical cache hit');
       } else {
         this.stats.historical.misses++;
-        logger.debug('Historical cache miss', { query, key });
+        logger.debug({ query, key }, 'Historical cache miss');
       }
 
       return data;
     } catch (error) {
-      logger.error('Error getting historical data from cache', { query, error });
+      logger.error({ query, error }, 'Error getting historical data from cache');
       throw new CacheError('Failed to get historical data from cache', 'get');
     }
   }
@@ -375,9 +375,9 @@ export class HurricaneCache {
       const key = this.getHistoricalKey(query);
       this.historicalCache.set(key, data);
       this.stats.historical.sets++;
-      logger.debug('Historical data cached', { query, key, count: data.length });
+      logger.debug({ query, key, count: data.length }, 'Historical data cached');
     } catch (error) {
-      logger.error('Error setting historical data in cache', { query, error });
+      logger.error({ query, error }, 'Error setting historical data in cache');
       throw new CacheError('Failed to set historical data in cache', 'set');
     }
   }
@@ -393,15 +393,15 @@ export class HurricaneCache {
 
       if (data) {
         this.stats.geocoding.hits++;
-        logger.debug('Geocoding cache hit', { location, key });
+        logger.debug({ location, key }, 'Geocoding cache hit');
       } else {
         this.stats.geocoding.misses++;
-        logger.debug('Geocoding cache miss', { location, key });
+        logger.debug({ location, key }, 'Geocoding cache miss');
       }
 
       return data;
     } catch (error) {
-      logger.error('Error getting geocoding from cache', { location, error });
+      logger.error({ location, error }, 'Error getting geocoding from cache');
       throw new CacheError('Failed to get geocoding from cache', 'get');
     }
   }
@@ -411,9 +411,9 @@ export class HurricaneCache {
       const key = this.getGeocodingKey(location);
       this.geocodingCache.set(key, { latitude, longitude });
       this.stats.geocoding.sets++;
-      logger.debug('Geocoding cached', { location, key, latitude, longitude });
+      logger.debug({ location, key, latitude, longitude }, 'Geocoding cached');
     } catch (error) {
-      logger.error('Error setting geocoding in cache', { location, error });
+      logger.error({ location, error }, 'Error setting geocoding in cache');
       throw new CacheError('Failed to set geocoding in cache', 'set');
     }
   }
@@ -435,7 +435,7 @@ export class HurricaneCache {
       this.geocodingCache.clear();
       logger.info('All hurricane caches cleared');
     } catch (error) {
-      logger.error('Error clearing caches', { error });
+      logger.error({ error }, 'Error clearing caches');
       throw new CacheError('Failed to clear caches', 'clear');
     }
   }
@@ -451,14 +451,14 @@ export class HurricaneCache {
     const historicalPurged = this.historicalCache.purgeStale();
     const geocodingPurged = this.geocodingCache.purgeStale();
 
-    logger.info('Purged stale hurricane cache entries', {
+    logger.info({
       currentHurricanes: currentPurged,
       forecasts: forecastPurged,
       alerts: alertPurged,
       tracks: trackPurged,
       historical: historicalPurged,
       geocoding: geocodingPurged,
-    });
+    }, 'Purged stale hurricane cache entries');
   }
 
   /**
@@ -568,7 +568,7 @@ export const cacheUtils = {
     hurricaneCache['forecastCache'].delete(forecastKey);
     hurricaneCache['trackCache'].delete(trackKey);
 
-    logger.info('Cache invalidated for hurricane', { hurricaneId });
+    logger.info({ hurricaneId }, 'Cache invalidated for hurricane');
   },
 
   /**
@@ -581,7 +581,7 @@ export const cacheUtils = {
     hurricaneCache['alertCache'].delete(alertsKey);
     hurricaneCache['geocodingCache'].delete(geoKey);
 
-    logger.info('Cache invalidated for location', { location });
+    logger.info({ location }, 'Cache invalidated for location');
   },
 
   /**
@@ -600,7 +600,7 @@ export const cacheUtils = {
     fetchCurrentHurricanes: () => Promise<ActiveHurricane[]>,
     commonLocations: string[] = ['Miami, FL', 'New Orleans, LA', 'Tampa, FL', 'Houston, TX']
   ): Promise<void> {
-    logger.info('Warming up hurricane cache', { locations: commonLocations.length });
+    logger.info({ locations: commonLocations.length }, 'Warming up hurricane cache');
 
     try {
       // Warm up current hurricanes
@@ -611,7 +611,7 @@ export const cacheUtils = {
       // This is a placeholder for when real APIs are integrated
       logger.info('Hurricane cache warm-up complete');
     } catch (error) {
-      logger.warn('Failed to warm up hurricane cache', { error });
+      logger.warn({ error }, 'Failed to warm up hurricane cache');
     }
   },
 

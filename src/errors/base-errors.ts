@@ -474,3 +474,24 @@ export function getRetryDelay(error: MCPError): number {
       return 10000; // 10 seconds default
   }
 }
+
+// =============================================================================
+// CACHE ERRORS
+// =============================================================================
+
+/**
+ * Cache-related error class
+ */
+export class CacheError extends MCPError {
+  constructor(operation: string, details?: any, correlationId?: string) {
+    super({
+      code: 'CACHE_ERROR',
+      message: `Cache operation failed: ${operation}`,
+      statusCode: 500,
+      userMessage: 'A caching error occurred',
+      recoveryHint: 'Please try again or contact support if the issue persists',
+      details,
+      correlationId,
+    });
+  }
+}

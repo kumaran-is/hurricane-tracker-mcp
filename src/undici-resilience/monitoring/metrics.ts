@@ -4,7 +4,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { logger } from '../../logger-pino.js';
+import { logger } from '../../logging/logger-pino.js';
 
 export interface RequestMetrics {
   duration: number;
@@ -356,7 +356,7 @@ export const metricsCollector = new MetricsCollector();
 // Auto-integrate with pool manager if available
 try {
   // This would be imported dynamically to avoid circular dependencies
-  import('../http/pool-manager.js').then(({ poolManager }) => {
+  import('../http/pool-manager.js').then(() => {
     // Hook into pool manager events when available
     logger.info('Metrics collector integrated with pool manager');
   }).catch(() => {

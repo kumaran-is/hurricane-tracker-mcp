@@ -13,7 +13,7 @@ import {
   IBTRACS_POOL_CONFIG,
   DEFAULT_RESILIENCE_CONFIG
 } from '../config/pool-config.js';
-import { logger } from '../../logger-pino.js';
+import { logger } from '../../logging/logger-pino.js';
 
 export interface PoolStats {
   connected: number;
@@ -162,7 +162,7 @@ export class OptimizedPoolManager {
             context
           }, 'Hurricane API Request');
 
-          const { statusCode, headers, body } = await pool.request(options);
+          const { statusCode, body } = await pool.request(options);
 
           logger.info({
             url: fullUrl,

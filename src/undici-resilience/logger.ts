@@ -3,7 +3,7 @@
  * Provides consistent logging interface for the resilience package
  */
 
-import { logger as mainLogger } from '../logger-pino.js';
+import { logger as mainLogger } from '../logging/logger-pino.js';
 
 /**
  * Re-export main logger with resilience context

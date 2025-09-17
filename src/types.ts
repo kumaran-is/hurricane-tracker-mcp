@@ -515,3 +515,86 @@ export interface Transport {
   onError(handler: (error: Error) => void): void;
   onClose(handler: () => void): void;
 }
+
+// =============================================================================
+// ADDITIONAL HURRICANE CACHE TYPES
+// =============================================================================
+
+export interface ActiveHurricane {
+  id: string;
+  name: string;
+  basin: BasinCode;
+  year: number;
+  status: HurricaneStatus;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  windSpeed: number;
+  pressure: number;
+  category: number;
+  movement: {
+    direction: number;
+    speed: number;
+  };
+  lastUpdate: string;
+}
+
+export interface HurricaneTrack {
+  stormId: string;
+  name: string;
+  points: Array<{
+    timestamp: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+    windSpeed: number;
+    pressure: number;
+    category: number;
+  }>;
+}
+
+export interface HurricaneForecast {
+  stormId: string;
+  name: string;
+  forecastPoints: Array<{
+    forecastTime: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+    windSpeed: number;
+    pressure: number;
+    category: number;
+    uncertainty: {
+      radiusOfUncertainty: number;
+      windSpeedUncertainty: number;
+    };
+  }>;
+  issuedAt: string;
+  validUntil: string;
+}
+
+export interface HistoricalHurricane {
+  id: string;
+  name: string;
+  basin: BasinCode;
+  year: number;
+  season: number;
+  startDate: string;
+  endDate: string;
+  maxWindSpeed: number;
+  minPressure: number;
+  maxCategory: number;
+  landfalls: Array<{
+    location: string;
+    date: string;
+    windSpeed: number;
+    category: number;
+  }>;
+  damages?: {
+    economic: number;
+    fatalities: number;
+  };
+}

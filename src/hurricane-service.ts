@@ -5,7 +5,6 @@
 
 import { z } from 'zod';
 import { logger, performanceLogger } from './logging/logger-pino.js';
-import { config } from './config/config.js';
 import { generateCorrelationId } from './logging/logger-pino.js';
 import { 
   NotFoundError,
@@ -55,7 +54,6 @@ export const searchHistoricalTracksSchema = z.object({
 // =============================================================================
 
 export class HurricaneService {
-  private readonly baseTimeout = config.performance.requestTimeoutMs;
   
   /**
    * Get all active tropical cyclones globally

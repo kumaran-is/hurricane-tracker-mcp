@@ -123,11 +123,11 @@ export class AuditLogger extends EventEmitter {
     this.startCleanupSchedule();
 
     if (this.config.enabled) {
-      logger.info('Hurricane Tracker audit logging system initialized', {
+      logger.info({
         instanceId: this.instanceId,
         retentionDays: this.config.retentionDays,
         enabledCategories: this.config.enabledCategories,
-      });
+      }, 'Hurricane Tracker audit logging system initialized');
     }
   }
 
@@ -461,7 +461,7 @@ export class AuditLogger extends EventEmitter {
       { metadata: { clearedEvents: eventCount } },
     );
 
-    logger.warn('Hurricane Tracker audit log cleared', { clearedEvents: eventCount });
+    logger.warn({ clearedEvents: eventCount }, 'Hurricane Tracker audit log cleared');
   }
 
   /**
@@ -475,10 +475,10 @@ export class AuditLogger extends EventEmitter {
       const removedCount = this.events.length - this.config.maxEvents;
       this.events = this.events.slice(-this.config.maxEvents);
 
-      logger.debug('Audit events trimmed due to max limit', {
+      logger.debug({
         removedCount,
         maxEvents: this.config.maxEvents,
-      });
+      }, 'Audit events trimmed due to max limit');
     }
   }
 
@@ -624,10 +624,10 @@ export class AuditLogger extends EventEmitter {
 
     const removedCount = originalCount - this.events.length;
     if (removedCount > 0) {
-      logger.debug('Hurricane audit events cleaned up', {
+      logger.debug({
         removedCount,
         retentionDays: this.config.retentionDays,
-      });
+      }, 'Hurricane audit events cleaned up');
     }
   }
 
@@ -692,7 +692,7 @@ export class AuditLogger extends EventEmitter {
    */
   private async sendToWebhook(event: any): Promise<void> {
     // In production, implement actual webhook sending
-    logger.debug('Would send hurricane audit event to webhook', { event });
+    logger.debug({ event }, 'Would send hurricane audit event to webhook');
   }
 
   /**

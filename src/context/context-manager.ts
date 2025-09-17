@@ -91,12 +91,12 @@ export class ContextManager {
 
     const estimate = this.estimateTokens(data);
 
-    logger.debug('Hurricane context optimization analysis', {
+    logger.debug({
       currentTokens: estimate.tokens,
       maxTokens: opts.maxTokens,
       dataType: Array.isArray(data) ? 'array' : typeof data,
       optimizationOptions: opts,
-    });
+    }, 'Hurricane context optimization analysis');
 
     // If within limits, return as-is
     if (estimate.tokens <= opts.maxTokens) {
@@ -124,10 +124,10 @@ export class ContextManager {
     }
 
     // If no optimization allowed, warn and return truncated
-    logger.warn('Hurricane response exceeds context limit and no optimization allowed', {
+    logger.warn({
       tokens: estimate.tokens,
       maxTokens: opts.maxTokens,
-    });
+    }, 'Hurricane response exceeds context limit and no optimization allowed');
 
     return this.applyTruncation(data, opts);
   }
@@ -156,12 +156,12 @@ export class ContextManager {
 
     const estimate = this.estimateTokens(firstPage);
 
-    logger.debug('Applied pagination optimization to hurricane data', {
+    logger.debug({
       originalItems: data.length,
       pageSize,
       hasMore,
       tokensAfterPagination: estimate.tokens,
-    });
+    }, 'Applied pagination optimization to hurricane data');
 
     return {
       data: firstPage,
@@ -197,11 +197,11 @@ export class ContextManager {
 
     const estimate = this.estimateTokens(summary);
 
-    logger.debug('Applied summarization optimization to hurricane data', {
+    logger.debug({
       originalTokens: this.estimateTokens(data).tokens,
       summaryTokens: estimate.tokens,
       summaryType: Array.isArray(data) ? 'array' : typeof data,
-    });
+    }, 'Applied summarization optimization to hurricane data');
 
     return {
       data: summary as T,
@@ -243,11 +243,11 @@ export class ContextManager {
 
     const estimate = this.estimateTokens(result);
 
-    logger.warn('Applied truncation optimization to hurricane data', {
+    logger.warn({
       originalTokens: this.estimateTokens(data).tokens,
       truncatedTokens: estimate.tokens,
       truncatedAt: maxChars,
-    });
+    }, 'Applied truncation optimization to hurricane data');
 
     return {
       data: result,

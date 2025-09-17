@@ -3,7 +3,7 @@
  * Prevents cascading failures by temporarily stopping requests to failing services
  */
 
-import { logger } from '../../logger-pino.js';
+import { logger } from '../../logging/logger-pino.js';
 
 export enum CircuitState {
   CLOSED = 'CLOSED',     // Normal operation

@@ -4,7 +4,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { logger, mcpLogger } from '../logger-pino.js';
+import { logger, mcpLogger } from '../logging/logger-pino.js';
 import { MCPError, ValidationError, wrapError } from '../errors/base-errors.js';
 import type { 
   MCPRequest, 

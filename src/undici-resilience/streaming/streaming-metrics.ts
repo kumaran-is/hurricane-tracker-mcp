@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { logger } from '../logger.js';
-import { BackpressureHandler, StreamMetrics } from './backpressure-handler.js';
+import { BackpressureHandler } from './backpressure-handler.js';
 
 export interface StreamingEventMetric {
   timestamp: number;

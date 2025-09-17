@@ -4,7 +4,7 @@
  * Specialized for Hurricane Tracker MCP operations
  */
 
-import { logger } from '../logger-pino.js';
+import { logger } from '../logging/logger-pino.js';
 import { ValidationError, MCPError } from '../errors/base-errors.js';
 
 /**

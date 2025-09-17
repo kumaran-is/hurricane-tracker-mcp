@@ -43,11 +43,11 @@ export class AuthMiddleware {
     this.config = { ...DEFAULT_AUTH_CONFIG, ...config };
     
     if (this.config.enabled) {
-      logger.info('Hurricane Tracker auth middleware initialized', {
+      logger.info({
         headerName: this.config.headerName,
         allowAnonymous: this.config.allowAnonymous,
         apiKeysConfigured: this.config.apiKeys.length,
-      });
+      }, 'Hurricane Tracker auth middleware initialized');
     }
   }
 
@@ -205,7 +205,7 @@ export class AuthMiddleware {
     }
 
     if (cleanedCount > 0) {
-      logger.debug('Cleaned up expired sessions', { count: cleanedCount });
+      logger.debug({ count: cleanedCount }, 'Cleaned up expired sessions');
     }
   }
 

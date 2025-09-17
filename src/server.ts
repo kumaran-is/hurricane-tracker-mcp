@@ -220,7 +220,7 @@ async function createHttpTransport() {
   });
 
   // Health check endpoint
-  app.get('/health', async (request, reply) => {
+  app.get('/health', async (_, reply) => {
     reply.send({
       status: 'healthy',
       timestamp: new Date().toISOString(),

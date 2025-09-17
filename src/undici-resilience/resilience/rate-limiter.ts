@@ -3,7 +3,7 @@
  * Prevents abuse by limiting requests over time windows
  */
 
-import { logger } from '../../logger-pino.js';
+import { logger } from '../../logging/logger-pino.js';
 
 export interface RateLimiterConfig {
   /** Maximum requests per window */
