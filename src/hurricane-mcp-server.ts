@@ -193,20 +193,30 @@ export class HurricaneMcpServer {
                   enum: ['Polygon']
                 },
                 coordinates: {
-                  type: 'array'
+                  type: 'array',
+                  items: {
+                    type: 'array',
+                    items: {
+                      type: 'array',
+                      items: {
+                        type: 'number'
+                      }
+                    }
+                  }
                 }
               },
-              required: ['type', 'coordinates']
+              required: ['type', 'coordinates'],
+              additionalProperties: false
             },
             start: {
               type: 'string',
               pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$',
-              description: 'Start date for search'
+              description: 'Start date for search (YYYY-MM-DD format)'
             },
             end: {
               type: 'string',
               pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$',
-              description: 'End date for search'
+              description: 'End date for search (YYYY-MM-DD format)'
             },
             basin: {
               type: 'string',
