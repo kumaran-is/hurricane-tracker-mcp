@@ -58,59 +58,60 @@ After adding the configuration, restart Cline to load the Hurricane Tracker MCP 
 
 ### 4. Test All Hurricane Tools
 
-Copy and paste these test prompts into Cline (each section separately):
+**Copy and paste these test prompts into Cline to test all 5 hurricane tools:**
 
-**Main Test Request:**
+#### **Quick Test - All Tools:**
 ```
-I need to track hurricane activity and get comprehensive information. Please help me test all the hurricane tracking capabilities:
+Test all hurricane tracking tools:
+
+1. Get active storms globally: get_active_storms
+2. Get storm cone for AL052024: get_storm_cone with stormId "AL052024"  
+3. Get storm track for AL052024: get_storm_track with stormId "AL052024"
+4. Get alerts for Miami: get_local_hurricane_alerts with lat 25.76, lon -80.19
+5. Search Gulf of Mexico: search_historical_tracks with area polygon [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]], dates 2024-01-01 to 2024-12-31
+
+Show me all responses including any mock data and error handling.
 ```
+
+#### **Individual Tool Tests:**
 
 **Test 1 - Active Storms:**
 ```
-First, show me all currently active tropical cyclones globally, then filter specifically for Atlantic basin storms using get_active_storms.
+Show me all active tropical cyclones using get_active_storms, then filter for Atlantic basin only with basin="AL"
 ```
 
-**Test 2 - Storm Cone Analysis:**
+**Test 2 - Storm Forecast Cone:**
 ```
-For storm AL052024, get the forecast cone of uncertainty and show me the 5-day forecast track with wind speeds and pressure data using get_storm_cone.
-```
-
-**Test 3 - Historical Track:**
-```
-Get the historical track data for storm AL052024 to see where it has been using get_storm_track.
+Get the forecast cone and 5-day track for storm AL052024 using get_storm_cone
 ```
 
-**Test 4 - Local Alerts:**
+**Test 3 - Storm Historical Track:**
 ```
-Check for hurricane alerts at these locations using get_local_hurricane_alerts:
-- Miami, FL area: latitude 25.76, longitude -80.19
-- New Orleans, LA area: latitude 29.95, longitude -90.07  
-- A location outside hurricane zones: latitude 45.0, longitude -75.0 (to test no alerts)
+Get the historical track data for storm AL052024 using get_storm_track
+```
+
+**Test 4 - Location-Based Alerts:**
+```
+Check hurricane alerts for these coordinates using get_local_hurricane_alerts:
+- Miami, FL: lat=25.76, lon=-80.19
+- New Orleans, LA: lat=29.95, lon=-90.07
+- Test invalid coordinates: lat=95, lon=200 (should show validation error)
 ```
 
 **Test 5 - Historical Search:**
 ```
-Search for historical hurricane tracks in the Gulf of Mexico region from 2020-2024 using search_historical_tracks. Use this area of interest (GeoJSON Polygon):
+Search for historical hurricane tracks in the Gulf of Mexico using search_historical_tracks with:
+- Area: GeoJSON polygon covering coordinates [[-95,25],[-85,25],[-85,31],[-95,31],[-95,25]]
+- Date range: 2024-01-01 to 2024-12-31
+- Basin filter: "AL" for Atlantic
 ```
 
-**GeoJSON Polygon for Test 5:**
-```json
-{
-  "type": "Polygon", 
-  "coordinates": [[
-    [-95.0, 25.0],
-    [-85.0, 25.0],
-    [-85.0, 31.0],
-    [-95.0, 31.0],
-    [-95.0, 25.0]
-  ]]
-}
-```
-
-**Final Test Instructions:**
-```
-Search from 2020-01-01 to 2024-12-31, filtering for Atlantic basin storms. Please run all these tests and show me the structured responses, including any error handling for invalid inputs.
-```
+#### **Expected Results:**
+- ✅ **JSON responses** with storm data, forecasts, tracks, and alerts
+- ✅ **Validation errors** for invalid inputs (helpful for testing)
+- ✅ **Mock data** with realistic hurricane information
+- ✅ **Correlation IDs** and performance metadata
+- ✅ **Clean error messages** with helpful hints
 
 ## 🌀 Available Hurricane Tools
 

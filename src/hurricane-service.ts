@@ -7,7 +7,6 @@ import { z } from 'zod';
 import { logger, performanceLogger } from './logging/logger-pino.js';
 import { generateCorrelationId } from './logging/logger-pino.js';
 import { 
-  NotFoundError,
   ValidationError 
 } from './errors/base-errors.js';
 import type {
@@ -142,58 +141,9 @@ export class HurricaneService {
       
       logger.info({ correlationId, stormId: validated.stormId }, 'Getting storm cone');
 
-      // Check if storm exists (placeholder logic)
-      if (validated.stormId !== 'AL052024') {
-        throw new NotFoundError('Storm', validated.stormId, correlationId);
-      }
-
-      // Mock storm cone data
-      const mockCone: StormCone = {
-        cone: {
-          type: 'Polygon',
-          coordinates: [[
-            [-45.2, 13.4],
-            [-44.0, 14.0],
-            [-42.5, 15.2],
-            [-41.0, 16.8],
-            [-39.2, 18.5],
-            [-37.8, 20.1],
-            [-39.5, 19.8],
-            [-41.2, 18.0],
-            [-43.0, 16.2],
-            [-44.8, 14.5],
-            [-45.2, 13.4]
-          ]]
-        },
-        forecastPoints: [
-          {
-            time: '2024-07-01T21:00:00Z',
-            lat: 13.8,
-            lon: -47.5,
-            windKts: 160,
-            pressureMb: 940
-          },
-          {
-            time: '2024-07-02T09:00:00Z',
-            lat: 14.5,
-            lon: -51.2,
-            windKts: 155,
-            pressureMb: 945
-          },
-          {
-            time: '2024-07-02T21:00:00Z',
-            lat: 15.4,
-            lon: -55.8,
-            windKts: 145,
-            pressureMb: 955
-          }
-        ],
-        metadata: {
-          stormId: validated.stormId,
-          advisoryTime: '2024-07-01T15:00:00Z',
-          forecastHours: [6, 12, 24, 36, 48, 72, 96, 120]
-        }
-      };
+      // Generate mock data for any valid storm ID format
+      // In real implementation, this would query NOAA APIs
+      const mockCone = this.generateMockStormCone(validated.stormId);
 
       const duration = Date.now() - startTime;
       
@@ -310,73 +260,9 @@ export class HurricaneService {
       
       logger.info({ correlationId, stormId: validated.stormId }, 'Getting storm track');
 
-      // Check if storm exists (placeholder logic)
-      if (validated.stormId !== 'AL052024') {
-        throw new NotFoundError('Storm', validated.stormId, correlationId);
-      }
-
-      // Mock storm track data
-      const mockTrack: StormTrack = {
-        track: {
-          type: 'LineString',
-          coordinates: [
-            [-40.5, 10.8],
-            [-41.8, 11.2],
-            [-43.2, 11.8],
-            [-44.1, 12.5],
-            [-45.2, 13.4]
-          ]
-        },
-        points: [
-          {
-            time: '2024-06-28T12:00:00Z',
-            lat: 10.8,
-            lon: -40.5,
-            windKts: 40,
-            pressureMb: 1008,
-            status: 'Tropical Depression'
-          },
-          {
-            time: '2024-06-28T18:00:00Z',
-            lat: 11.2,
-            lon: -41.8,
-            windKts: 50,
-            pressureMb: 1005,
-            status: 'Tropical Storm'
-          },
-          {
-            time: '2024-06-29T00:00:00Z',
-            lat: 11.8,
-            lon: -43.2,
-            windKts: 65,
-            pressureMb: 995,
-            status: 'Tropical Storm'
-          },
-          {
-            time: '2024-06-29T12:00:00Z',
-            lat: 12.5,
-            lon: -44.1,
-            windKts: 80,
-            pressureMb: 985,
-            status: 'Hurricane'
-          },
-          {
-            time: '2024-07-01T12:00:00Z',
-            lat: 13.4,
-            lon: -45.2,
-            windKts: 165,
-            pressureMb: 934,
-            status: 'Hurricane'
-          }
-        ],
-        metadata: {
-          stormId: validated.stormId,
-          startTime: '2024-06-28T12:00:00Z',
-          endTime: '2024-07-01T12:00:00Z',
-          maxWindKts: 165,
-          minPressureMb: 934
-        }
-      };
+      // Generate mock data for any valid storm ID format
+      // In real implementation, this would query NOAA APIs
+      const mockTrack = this.generateMockStormTrack(validated.stormId);
 
       const duration = Date.now() - startTime;
       
@@ -505,6 +391,145 @@ export class HurricaneService {
 
       throw error;
     }
+  }
+
+  /**
+   * Generate mock storm cone data for any storm ID
+   */
+  private generateMockStormCone(stormId: string): StormCone {
+    // Extract basin and storm number for varied mock data
+    const basin = stormId.substring(0, 2);
+    const stormNum = parseInt(stormId.substring(2, 4));
+    
+    // Vary location based on basin
+    let baseLat: number, baseLon: number;
+    if (basin === 'AL') {
+      baseLat = 15 + (stormNum % 15); // Atlantic: 15-30°N
+      baseLon = -40 - (stormNum % 40); // Atlantic: -40 to -80°W
+    } else if (basin === 'EP') {
+      baseLat = 12 + (stormNum % 10); // E Pacific: 12-22°N  
+      baseLon = -105 - (stormNum % 25); // E Pacific: -105 to -130°W
+    } else {
+      baseLat = 20; // Default
+      baseLon = -70;
+    }
+    
+    // Vary wind speeds based on storm number
+    const windSpeed = 80 + (stormNum % 85); // 80-165 kts
+    const pressure = 1000 - (stormNum % 70); // 930-1000 mb
+    
+    return {
+      cone: {
+        type: 'Polygon',
+        coordinates: [[
+          [baseLon, baseLat],
+          [baseLon + 2, baseLat + 1],
+          [baseLon + 4, baseLat + 3],
+          [baseLon + 2, baseLat + 5],
+          [baseLon - 2, baseLat + 4],
+          [baseLon - 3, baseLat + 2],
+          [baseLon, baseLat]
+        ]]
+      },
+      forecastPoints: [
+        {
+          time: new Date(Date.now() + 6 * 3600000).toISOString(),
+          lat: baseLat + 0.5,
+          lon: baseLon + 1,
+          windKts: windSpeed - 5,
+          pressureMb: pressure + 5
+        },
+        {
+          time: new Date(Date.now() + 24 * 3600000).toISOString(),
+          lat: baseLat + 1.5,
+          lon: baseLon + 3,
+          windKts: windSpeed - 10,
+          pressureMb: pressure + 10
+        },
+        {
+          time: new Date(Date.now() + 48 * 3600000).toISOString(),
+          lat: baseLat + 3,
+          lon: baseLon + 5,
+          windKts: windSpeed - 20,
+          pressureMb: pressure + 20
+        }
+      ],
+      metadata: {
+        stormId,
+        advisoryTime: new Date().toISOString(),
+        forecastHours: [6, 12, 24, 36, 48, 72, 96, 120]
+      }
+    };
+  }
+
+  /**
+   * Generate mock storm track data for any storm ID
+   */
+  private generateMockStormTrack(stormId: string): StormTrack {
+    // Extract basin and storm number for varied mock data
+    const basin = stormId.substring(0, 2);
+    const stormNum = parseInt(stormId.substring(2, 4));
+    
+    // Vary starting location based on basin
+    let startLat: number, startLon: number;
+    if (basin === 'AL') {
+      startLat = 10 + (stormNum % 10);
+      startLon = -30 - (stormNum % 30);
+    } else if (basin === 'EP') {
+      startLat = 8 + (stormNum % 8);
+      startLon = -95 - (stormNum % 20);
+    } else {
+      startLat = 15;
+      startLon = -50;
+    }
+    
+    // Generate track points
+    const trackPoints = [];
+    const coordinates = [];
+    const windSpeed = 40 + (stormNum % 125); // 40-165 kts
+    
+    for (let i = 0; i < 5; i++) {
+      const lat = startLat + i * 0.5;
+      const lon = startLon - i * 1.2;
+      const time = new Date(Date.now() - (4 - i) * 24 * 3600000).toISOString();
+      const winds = Math.min(windSpeed + i * 20, 165);
+      const pressure = Math.max(1000 - i * 15, 920);
+      
+      let status: 'Tropical Depression' | 'Tropical Storm' | 'Hurricane';
+      if (winds < 39) {
+        status = 'Tropical Depression';
+      } else if (winds < 74) {
+        status = 'Tropical Storm';
+      } else {
+        status = 'Hurricane';
+      }
+      
+      trackPoints.push({
+        time,
+        lat,
+        lon,
+        windKts: winds,
+        pressureMb: pressure,
+        status
+      });
+      
+      coordinates.push([lon, lat]);
+    }
+    
+    return {
+      track: {
+        type: 'LineString',
+        coordinates
+      },
+      points: trackPoints,
+      metadata: {
+        stormId,
+        startTime: trackPoints[0].time,
+        endTime: trackPoints[trackPoints.length - 1].time,
+        maxWindKts: Math.max(...trackPoints.map(p => p.windKts)),
+        minPressureMb: Math.min(...trackPoints.map(p => p.pressureMb))
+      }
+    };
   }
 
 }
