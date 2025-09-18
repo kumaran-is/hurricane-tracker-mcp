@@ -6,12 +6,12 @@
 import { LRUCache } from 'lru-cache';
 import { logger } from '../logging/logger-pino.js';
 import { CacheError } from '../errors/base-errors.js';
-import type { 
+import type {
   ActiveHurricane,
   HurricaneTrack,
   HurricaneForecast,
   HurricaneAlert,
-  HistoricalHurricane
+  HistoricalHurricane,
 } from '../types.js';
 
 export interface CacheConfig {
@@ -181,10 +181,18 @@ export class HurricaneCache {
     name?: string;
   }): string {
     const parts = ['historical'];
-    if (query.year) parts.push(`year:${query.year}`);
-    if (query.basin) parts.push(`basin:${query.basin.toLowerCase()}`);
-    if (query.category) parts.push(`cat:${query.category}`);
-    if (query.name) parts.push(`name:${query.name.toLowerCase()}`);
+    if (query.year) {
+      parts.push(`year:${query.year}`);
+    }
+    if (query.basin) {
+      parts.push(`basin:${query.basin.toLowerCase()}`);
+    }
+    if (query.category) {
+      parts.push(`cat:${query.category}`);
+    }
+    if (query.name) {
+      parts.push(`name:${query.name.toLowerCase()}`);
+    }
     return parts.join(':');
   }
 
@@ -474,8 +482,8 @@ export class HurricaneCache {
       currentHurricanes: {
         ...this.stats.currentHurricanes,
         hitRatio: calculateHitRatio(
-          this.stats.currentHurricanes.hits, 
-          this.stats.currentHurricanes.misses
+          this.stats.currentHurricanes.hits,
+          this.stats.currentHurricanes.misses,
         ),
         size: this.currentHurricaneCache.size,
         maxSize: this.config.maxSize,
@@ -542,11 +550,11 @@ export class HurricaneCache {
         tracks: this.trackCache.size,
         historical: this.historicalCache.size,
         geocoding: this.geocodingCache.size,
-        total: this.currentHurricaneCache.size + 
-               this.forecastCache.size + 
-               this.alertCache.size + 
-               this.trackCache.size + 
-               this.historicalCache.size + 
+        total: this.currentHurricaneCache.size +
+               this.forecastCache.size +
+               this.alertCache.size +
+               this.trackCache.size +
+               this.historicalCache.size +
                this.geocodingCache.size,
       },
     };
@@ -598,7 +606,7 @@ export const cacheUtils = {
    */
   async warmUp(
     fetchCurrentHurricanes: () => Promise<ActiveHurricane[]>,
-    commonLocations: string[] = ['Miami, FL', 'New Orleans, LA', 'Tampa, FL', 'Houston, TX']
+    commonLocations: string[] = ['Miami, FL', 'New Orleans, LA', 'Tampa, FL', 'Houston, TX'],
   ): Promise<void> {
     logger.info({ locations: commonLocations.length }, 'Warming up hurricane cache');
 

@@ -29,13 +29,13 @@ const loggerConfig: pino.LoggerOptions = {
   // Pretty print in development
   transport: envConfig.prettyLogs
     ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname',
-        },
-      }
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: 'HH:MM:ss Z',
+        ignore: 'pid,hostname',
+      },
+    }
     : undefined,
 };
 
@@ -95,7 +95,7 @@ export const mcpLogger = {
         },
         capabilities: data.capabilities,
       },
-      'MCP client initialized'
+      'MCP client initialized',
     );
   },
 
@@ -149,7 +149,7 @@ export const mcpLogger = {
     if (data.error) {
       logger.error(
         { ...logData, error: data.error.message, stack: data.error.stack },
-        `Transport ${data.event}: ${data.transport}`
+        `Transport ${data.event}: ${data.transport}`,
       );
     } else {
       logger.info(logData, `Transport ${data.event}: ${data.transport}`);
@@ -174,7 +174,7 @@ export const mcpLogger = {
         message: data.message,
         errorCode: data.code,
       },
-      'MCP protocol error'
+      'MCP protocol error',
     );
   },
 };
@@ -238,7 +238,7 @@ export const performanceLogger = {
         ...(data.size && { sizeBytes: data.size }),
         ...(data.ttl && { ttlSeconds: data.ttl }),
       },
-      `Cache ${data.operation}: ${data.key}`
+      `Cache ${data.operation}: ${data.key}`,
     );
   },
 
@@ -261,7 +261,7 @@ export const performanceLogger = {
         userAgent: data.userAgent,
         ip: data.ip,
       },
-      `HTTP ${data.method} ${data.url}`
+      `HTTP ${data.method} ${data.url}`,
     );
   },
 
@@ -276,7 +276,7 @@ export const performanceLogger = {
     responseTime: number;
   }) {
     const logLevel = data.statusCode >= 400 ? 'warn' : 'debug';
-    
+
     logger[logLevel](
       {
         event: 'http_response',
@@ -286,7 +286,7 @@ export const performanceLogger = {
         statusCode: data.statusCode,
         responseTimeMs: data.responseTime,
       },
-      `HTTP ${data.method} ${data.url} ${data.statusCode}`
+      `HTTP ${data.method} ${data.url} ${data.statusCode}`,
     );
   },
 
@@ -314,7 +314,7 @@ export const performanceLogger = {
         event: 'system_metrics',
         metrics: data,
       },
-      'System performance metrics'
+      'System performance metrics',
     );
   },
 };
@@ -334,7 +334,7 @@ export const auditLogger = {
     severity: 'low' | 'medium' | 'high' | 'critical';
   }) {
     const logLevel = data.severity === 'critical' || data.severity === 'high' ? 'error' : 'warn';
-    
+
     logger[logLevel](
       {
         event: 'security_event',
@@ -344,7 +344,7 @@ export const auditLogger = {
         severity: data.severity,
         details: data.details,
       },
-      `Security event: ${data.event}`
+      `Security event: ${data.event}`,
     );
   },
 
@@ -369,7 +369,7 @@ export const auditLogger = {
         success: data.success,
         ...(data.metadata && { metadata: data.metadata }),
       },
-      `User action: ${data.action} on ${data.resource}`
+      `User action: ${data.action} on ${data.resource}`,
     );
   },
 
@@ -392,7 +392,7 @@ export const auditLogger = {
         recordCount: data.recordCount,
         source: data.source,
       },
-      `Data access: ${data.operation} ${data.dataType}`
+      `Data access: ${data.operation} ${data.dataType}`,
     );
   },
 };
@@ -412,7 +412,7 @@ export const healthLogger = {
     details?: any;
   }) {
     const logLevel = data.status === 'healthy' ? 'debug' : 'warn';
-    
+
     logger[logLevel](
       {
         event: 'health_check',
@@ -422,7 +422,7 @@ export const healthLogger = {
         ...(data.error && { error: data.error }),
         ...(data.details && { details: data.details }),
       },
-      `Health check: ${data.component} is ${data.status}`
+      `Health check: ${data.component} is ${data.status}`,
     );
   },
 
@@ -445,7 +445,7 @@ export const healthLogger = {
         ...(data.version && { version: data.version }),
         ...(data.config && { config: data.config }),
       },
-      `${data.component} ${data.event}`
+      `${data.component} ${data.event}`,
     );
   },
 };
@@ -463,7 +463,7 @@ export function logError(
     correlationId?: string;
     operation?: string;
     metadata?: any;
-  }
+  },
 ) {
   logger.error(
     {
@@ -473,7 +473,7 @@ export function logError(
       operation: context.operation,
       ...(context.metadata && { metadata: context.metadata }),
     },
-    `Error in ${context.operation || 'unknown operation'}`
+    `Error in ${context.operation || 'unknown operation'}`,
   );
 }
 
@@ -485,14 +485,14 @@ export function logWarning(
   context: {
     correlationId?: string;
     metadata?: any;
-  }
+  },
 ) {
   logger.warn(
     {
       correlationId: context.correlationId,
       ...(context.metadata && { metadata: context.metadata }),
     },
-    message
+    message,
   );
 }
 

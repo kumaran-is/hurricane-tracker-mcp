@@ -15,7 +15,7 @@ export function createSanitizationMiddleware() {
 
   return async function sanitizationMiddleware(
     input: any,
-    context?: { correlationId?: string; source?: string }
+    context?: { correlationId?: string; source?: string },
   ): Promise<any> {
     const correlationId = context?.correlationId || 'unknown';
     const startTime = Date.now();
@@ -94,7 +94,7 @@ export function createHurricaneSanitizationMiddleware() {
 
   return async function hurricaneSanitizationMiddleware(
     input: any,
-    context?: { correlationId?: string; operation?: string }
+    context?: { correlationId?: string; operation?: string },
   ): Promise<any> {
     const correlationId = context?.correlationId || 'unknown';
 
@@ -126,11 +126,11 @@ export function createHurricaneSanitizationMiddleware() {
       }
 
       // Sanitize coordinates if present
-      if ((sanitized.lat !== undefined && sanitized.lon !== undefined) || 
+      if ((sanitized.lat !== undefined && sanitized.lon !== undefined) ||
           (sanitized.latitude !== undefined && sanitized.longitude !== undefined)) {
         const lat = sanitized.lat || sanitized.latitude;
         const lon = sanitized.lon || sanitized.longitude;
-        
+
         const coordinates = securityManager.sanitizeCoordinates(lat, lon);
 
         if (!coordinates) {
@@ -189,7 +189,7 @@ export function createHurricaneSanitizationMiddleware() {
       if (sanitized.basin && typeof sanitized.basin === 'string') {
         const validBasins = ['AL', 'EP', 'CP', 'WP', 'IO', 'SH', 'NA', 'SA', 'NI', 'SI', 'SP'];
         const basinCode = sanitized.basin.toUpperCase();
-        
+
         if (!validBasins.includes(basinCode)) {
           logger.warn({
             correlationId,
@@ -206,7 +206,7 @@ export function createHurricaneSanitizationMiddleware() {
       // Validate storm IDs (format: BASINNNNYYYY, e.g., AL012023)
       if (sanitized.stormId && typeof sanitized.stormId === 'string') {
         const stormIdPattern = /^[A-Z]{2}\d{2}\d{4}$/;
-        
+
         if (!stormIdPattern.test(sanitized.stormId.toUpperCase())) {
           logger.warn({
             correlationId,
@@ -224,7 +224,7 @@ export function createHurricaneSanitizationMiddleware() {
       for (const field of dateFields) {
         if (sanitized[field] && typeof sanitized[field] === 'string') {
           const date = new Date(sanitized[field]);
-          
+
           if (isNaN(date.getTime())) {
             logger.warn({
               correlationId,
@@ -284,12 +284,12 @@ export function createComprehensiveSanitizationMiddleware() {
 
   return async function comprehensiveSanitizationMiddleware(
     input: any,
-    context?: { 
-      correlationId?: string; 
-      source?: string; 
+    context?: {
+      correlationId?: string;
+      source?: string;
       operation?: string;
       isHurricaneOperation?: boolean;
-    }
+    },
   ): Promise<any> {
     // First apply general sanitization
     let sanitized = await generalSanitization(input, {
@@ -298,7 +298,7 @@ export function createComprehensiveSanitizationMiddleware() {
     });
 
     // Then apply hurricane-specific sanitization for hurricane operations
-    if (context?.isHurricaneOperation || 
+    if (context?.isHurricaneOperation ||
         context?.operation?.toLowerCase().includes('hurricane') ||
         context?.operation?.toLowerCase().includes('storm') ||
         context?.operation?.toLowerCase().includes('weather')) {
@@ -319,10 +319,10 @@ export function createComprehensiveSanitizationMiddleware() {
 export async function sanitizeToolCall(
   toolName: string,
   args: any,
-  correlationId?: string
+  correlationId?: string,
 ): Promise<any> {
   const middleware = createComprehensiveSanitizationMiddleware();
-  
+
   return await middleware(args, {
     correlationId,
     source: 'tool-call',
@@ -338,10 +338,10 @@ export async function sanitizeToolCall(
 export async function sanitizeResourceAccess(
   resourceUri: string,
   params: any,
-  correlationId?: string
+  correlationId?: string,
 ): Promise<any> {
   const middleware = createComprehensiveSanitizationMiddleware();
-  
+
   return await middleware(params, {
     correlationId,
     source: 'resource-access',

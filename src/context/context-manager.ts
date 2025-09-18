@@ -322,7 +322,7 @@ export class ContextManager {
     const hurricaneFields = [
       'id', 'name', 'basin', 'category', 'status', 'latitude', 'longitude',
       'windSpeed', 'pressure', 'movement', 'lastUpdate', 'date', 'time',
-      'severity', 'type', 'location', 'coordinates'
+      'severity', 'type', 'location', 'coordinates',
     ];
 
     for (const field of hurricaneFields) {
@@ -457,8 +457,8 @@ export class ContextManager {
       .map(item => item.basin)
       .filter(Boolean);
 
-    const active = data.filter(item => 
-      item.status === 'active' || item.status === 'ongoing'
+    const active = data.filter(item =>
+      item.status === 'active' || item.status === 'ongoing',
     ).length;
 
     return {
@@ -466,8 +466,8 @@ export class ContextManager {
       activeStorms: active,
       categoryDistribution: this.countOccurrences(categories),
       basinDistribution: this.countOccurrences(basins),
-      averageCategory: categories.length > 0 
-        ? categories.reduce((a, b) => a + b, 0) / categories.length 
+      averageCategory: categories.length > 0
+        ? categories.reduce((a, b) => a + b, 0) / categories.length
         : null,
     };
   }
@@ -559,7 +559,7 @@ export const hurricaneContextUtils = {
   createContextAwareError(error: Error, context?: any): string {
     const baseMessage = error.message;
     const estimate = contextManager.estimateTokens(baseMessage + JSON.stringify(context || {}));
-    
+
     if (estimate.tokens > 500) {
       return `${baseMessage} [Context details omitted due to size]`;
     }

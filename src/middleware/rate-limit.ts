@@ -77,8 +77,10 @@ class TokenBucket {
    */
   getTimeUntilToken(): number {
     this.refill();
-    if (this.tokens > 0) return 0;
-    
+    if (this.tokens > 0) {
+      return 0;
+    }
+
     return Math.ceil((1 / this.refillRate) * 1000);
   }
 
@@ -191,11 +193,11 @@ export class RateLimitMiddleware {
         if (!bucket.consume(1)) {
           // Block IP if they exceed limits repeatedly
           this.blockIP(ip);
-          
+
           const oldestRequest = window.getOldestRequest();
           const resetTime = oldestRequest ? oldestRequest + this.config.windowSizeMs : Date.now() + this.config.windowSizeMs;
           const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
-          
+
           return this.blockRequest(retryAfter);
         }
       }
@@ -209,11 +211,11 @@ export class RateLimitMiddleware {
 
     } catch (error) {
       logger.error({ identifier, ip, error }, 'Error in rate limiting check');
-      
+
       if (this.config.skipIfError) {
         return this.allowRequest(this.config.requestsPerWindow);
       }
-      
+
       return this.blockRequest(60); // Block for 1 minute on error
     }
   }
@@ -256,7 +258,7 @@ export class RateLimitMiddleware {
   private blockIP(ip: string): void {
     const blockUntil = Date.now() + this.config.blockDuration;
     this.blockedIPs.set(ip, blockUntil);
-    
+
     logger.warn({
       ip,
       blockDurationMs: this.config.blockDuration,
@@ -293,7 +295,7 @@ export class RateLimitMiddleware {
   cleanup(): void {
     const now = Date.now();
     let cleanedBuckets = 0;
-    let cleanedWindows = 0;
+    const cleanedWindows = 0;
     let cleanedBlocks = 0;
 
     // Clean up expired blocked IPs
@@ -306,7 +308,7 @@ export class RateLimitMiddleware {
 
     // Clean up inactive buckets (older than 2x window size)
     for (const [identifier, bucket] of this.buckets.entries()) {
-      if (bucket.getTokens() === this.config.burstAllowance && 
+      if (bucket.getTokens() === this.config.burstAllowance &&
           !this.windows.has(identifier)) {
         this.buckets.delete(identifier);
         cleanedBuckets++;
@@ -356,11 +358,11 @@ export class RateLimitMiddleware {
   unblockIP(ip: string): boolean {
     const wasBlocked = this.blockedIPs.has(ip);
     this.blockedIPs.delete(ip);
-    
+
     if (wasBlocked) {
       logger.info({ ip }, 'IP unblocked manually');
     }
-    
+
     return wasBlocked;
   }
 }

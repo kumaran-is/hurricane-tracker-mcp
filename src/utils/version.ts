@@ -51,15 +51,19 @@ export function getVersionString(): string {
 export function isVersionCompatible(minVersion: string): boolean {
   const currentParts = VERSION.split('.').map(Number);
   const minParts = minVersion.split('.').map(Number);
-  
+
   for (let i = 0; i < Math.max(currentParts.length, minParts.length); i++) {
     const current = currentParts[i] || 0;
     const min = minParts[i] || 0;
-    
-    if (current > min) return true;
-    if (current < min) return false;
+
+    if (current > min) {
+      return true;
+    }
+    if (current < min) {
+      return false;
+    }
   }
-  
+
   return true; // Equal versions
 }
 
@@ -98,12 +102,12 @@ export const HurricaneUtils = {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // 0-based to 1-based
-    
+
     // Atlantic hurricane season: June 1 - November 30
     // Eastern Pacific: May 15 - November 30
     // For simplicity, using Atlantic season dates
     const isActive = month >= 6 && month <= 11;
-    
+
     return { year, isActive };
   },
 
@@ -114,11 +118,11 @@ export const HurricaneUtils = {
     if (!stormId || stormId.length !== 8) {
       return stormId;
     }
-    
+
     const basin = stormId.substring(0, 2);
     const number = stormId.substring(2, 4);
     const year = stormId.substring(4, 8);
-    
+
     return `${basin}${number}${year}`;
   },
 
@@ -129,7 +133,7 @@ export const HurricaneUtils = {
     if (!stormId || stormId.length !== 8) {
       return null;
     }
-    
+
     return {
       basin: stormId.substring(0, 2),
       number: stormId.substring(2, 4),
@@ -163,7 +167,7 @@ export const HurricaneUtils = {
    */
   categorizeHurricane(windKnots: number): { category: number | string; description: string } {
     const windMph = HurricaneUtils.knotsToMph(windKnots);
-    
+
     if (windMph < 39) {
       return { category: 'TD', description: 'Tropical Depression' };
     } else if (windMph < 74) {
@@ -188,9 +192,9 @@ export const HurricaneUtils = {
     const R = 3959; // Earth's radius in miles
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
+    const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return Math.round(R * c);
@@ -225,7 +229,7 @@ export const PerformanceUtils = {
       end: (): number => {
         const end = process.hrtime.bigint();
         return Number(end - start) / 1000000; // Convert to milliseconds
-      }
+      },
     };
   },
 
@@ -233,7 +237,9 @@ export const PerformanceUtils = {
    * Format bytes to human readable string
    */
   formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -248,7 +254,7 @@ export const PerformanceUtils = {
     const total = usage.heapTotal;
     const used = usage.heapUsed;
     const percentage = Math.round((used / total) * 100);
-    
+
     return {
       used: PerformanceUtils.formatBytes(used),
       total: PerformanceUtils.formatBytes(total),
@@ -272,18 +278,22 @@ export const ErrorUtils = {
    * Sanitize error for logging (remove sensitive data)
    */
   sanitizeError(error: any): any {
-    if (!error) return error;
-    
+    if (!error) {
+      return error;
+    }
+
     const sanitized = { ...error };
-    
+
     // Remove sensitive fields
     const sensitiveFields = ['password', 'token', 'apikey', 'secret', 'authorization'];
-    
+
     const sanitizeObject = (obj: any): any => {
-      if (typeof obj !== 'object' || obj === null) return obj;
-      
+      if (typeof obj !== 'object' || obj === null) {
+        return obj;
+      }
+
       const result = Array.isArray(obj) ? [] : {};
-      
+
       for (const [key, value] of Object.entries(obj)) {
         const lowerKey = key.toLowerCase();
         if (sensitiveFields.some(field => lowerKey.includes(field))) {
@@ -294,10 +304,10 @@ export const ErrorUtils = {
           (result as any)[key] = value;
         }
       }
-      
+
       return result;
     };
-    
+
     return sanitizeObject(sanitized);
   },
 };

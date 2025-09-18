@@ -62,10 +62,10 @@ export function validateJSONRPC(request: any, context?: ValidationContext): void
       statusCode: 400,
       userMessage: 'Unsupported JSON-RPC version',
       recoveryHint: 'Use JSON-RPC version 2.0',
-      details: { 
+      details: {
         method: request.method,
         expected: '2.0',
-        received: request.jsonrpc 
+        received: request.jsonrpc,
       },
     });
   }
@@ -284,7 +284,7 @@ function validateHistoricalSearchParams(args: any): void {
   // Validate year range
   if (args.startYear || args.endYear) {
     const currentYear = new Date().getFullYear();
-    
+
     if (args.startYear) {
       const startYear = Number(args.startYear);
       if (isNaN(startYear) || startYear < 1851 || startYear > currentYear) {

@@ -109,19 +109,19 @@ export class SecurityManager {
     // eslint-disable-next-line no-control-regex
     return str.replace(/[\0\x08\x09\x1a\n\r"'\\%]/g, (char) => {
       switch (char) {
-        case '\0': return '\\0';
-        case '\x08': return '\\b';
-        case '\x09': return '\\t';
-        case '\x1a': return '\\z';
-        case '\n': return '\\n';
-        case '\r': return '\\r';
-        case '"':
-        case "'":
-        case '\\':
-        case '%':
-          return '\\' + char;
-        default:
-          return char;
+      case '\0': return '\\0';
+      case '\x08': return '\\b';
+      case '\x09': return '\\t';
+      case '\x1a': return '\\z';
+      case '\n': return '\\n';
+      case '\r': return '\\r';
+      case '"':
+      case "'":
+      case '\\':
+      case '%':
+        return '\\' + char;
+      default:
+        return char;
       }
     });
   }
@@ -233,10 +233,10 @@ export class SecurityManager {
     }
 
     const sanitized = this.sanitizeString(stormId);
-    
+
     // Storm ID format: Basin (2 letters) + Number (2 digits) + Year (4 digits)
     const stormIdPattern = /^[A-Z]{2}\d{2}\d{4}$/;
-    
+
     return stormIdPattern.test(sanitized) && sanitized.length === 8;
   }
 
@@ -249,7 +249,7 @@ export class SecurityManager {
     }
 
     const sanitized = this.sanitizeString(stormName);
-    
+
     // Storm names should only contain letters and spaces
     return /^[a-zA-Z\s]{1,50}$/.test(sanitized);
   }
@@ -263,7 +263,7 @@ export class SecurityManager {
     }
 
     const sanitized = this.sanitizeString(dateParam);
-    
+
     // Check for ISO date format (YYYY-MM-DD) or year (YYYY)
     if (/^\d{4}-\d{2}-\d{2}$/.test(sanitized)) {
       const date = new Date(sanitized);
@@ -272,14 +272,14 @@ export class SecurityManager {
       }
       return sanitized;
     }
-    
+
     if (/^\d{4}$/.test(sanitized)) {
       const year = parseInt(sanitized, 10);
       if (year >= 1851 && year <= new Date().getFullYear() + 1) {
         return sanitized;
       }
     }
-    
+
     return null;
   }
 

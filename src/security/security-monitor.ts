@@ -691,7 +691,7 @@ export class SecurityMonitor extends EventEmitter {
    */
   cleanup(): void {
     const now = Date.now();
-    
+
     // Clean up old attempt tracking
     for (const [key, data] of this.attemptTracking.entries()) {
       if (now - data.lastAttempt > this.config.bruteForceProtection.timeWindow) {

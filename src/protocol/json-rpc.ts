@@ -6,11 +6,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import { logger, mcpLogger } from '../logging/logger-pino.js';
 import { MCPError, ValidationError, wrapError } from '../errors/base-errors.js';
-import type { 
-  MCPRequest, 
-  MCPResponse, 
-  MCPNotification, 
-  MCPError as MCPErrorType 
+import type {
+  MCPRequest,
+  MCPResponse,
+  MCPNotification,
+  MCPError as MCPErrorType,
 } from '../types.js';
 
 // =============================================================================
@@ -154,7 +154,7 @@ export function validateJSONRPCMessage(message: any): {
 export function createRequest(
   method: string,
   params?: any,
-  id?: string | number
+  id?: string | number,
 ): MCPRequest {
   return {
     jsonrpc: JSONRPC_VERSION,
@@ -191,7 +191,7 @@ export function createSuccessResponse(id: string | number, result: any): MCPResp
  */
 export function createErrorResponse(
   id: string | number | null,
-  error: MCPErrorType
+  error: MCPErrorType,
 ): MCPResponse {
   return {
     jsonrpc: JSONRPC_VERSION,
@@ -205,7 +205,7 @@ export function createErrorResponse(
  */
 export function createErrorResponseFromMCPError(
   id: string | number | null,
-  mcpError: MCPError
+  mcpError: MCPError,
 ): MCPResponse {
   return mcpError.toJSONRPC(id ?? 'unknown');
 }
@@ -275,7 +275,7 @@ export class JSONRPCProcessor {
         } catch (parseError) {
           logger.warn(
             { correlationId, rawMessage, error: parseError },
-            'JSON parse error'
+            'JSON parse error',
           );
           return createErrorResponse(null, {
             code: JSON_RPC_ERRORS.PARSE_ERROR,
@@ -311,44 +311,44 @@ export class JSONRPCProcessor {
    */
   private async processSingle(
     message: any,
-    correlationId: string
+    correlationId: string,
   ): Promise<MCPResponse | null> {
     const validation = validateJSONRPCMessage(message);
 
     if (!validation.valid) {
       logger.warn(
         { correlationId, message, validationError: validation.error },
-        'Invalid JSON-RPC message'
+        'Invalid JSON-RPC message',
       );
       return createErrorResponse(message.id || null, validation.error!);
     }
 
     try {
       switch (validation.type) {
-        case 'request':
-          const result = await this.handler.handleRequest(message as MCPRequest);
-          return createSuccessResponse(message.id, result);
+      case 'request':
+        const result = await this.handler.handleRequest(message as MCPRequest);
+        return createSuccessResponse(message.id, result);
 
-        case 'notification':
-          await this.handler.handleNotification(message as MCPNotification);
-          return null; // Notifications don't get responses
+      case 'notification':
+        await this.handler.handleNotification(message as MCPNotification);
+        return null; // Notifications don't get responses
 
-        case 'response':
-          logger.warn(
-            { correlationId, message },
-            'Received response message (should be handled by client)'
-          );
-          return null;
+      case 'response':
+        logger.warn(
+          { correlationId, message },
+          'Received response message (should be handled by client)',
+        );
+        return null;
 
-        default:
-          return createErrorResponse(message.id || null, {
-            code: JSON_RPC_ERRORS.INVALID_REQUEST,
-            message: 'Unknown message type',
-          });
+      default:
+        return createErrorResponse(message.id || null, {
+          code: JSON_RPC_ERRORS.INVALID_REQUEST,
+          message: 'Unknown message type',
+        });
       }
     } catch (error) {
       const wrappedError = wrapError(error, `handle_${validation.type}`, correlationId);
-      
+
       mcpLogger.protocolError({
         correlationId,
         error: wrappedError,
@@ -364,7 +364,7 @@ export class JSONRPCProcessor {
    */
   private async processBatch(
     messages: any[],
-    correlationId: string
+    correlationId: string,
   ): Promise<MCPResponse[]> {
     const batchValidation = validateBatchMessage(messages);
     if (!batchValidation.valid) {
@@ -373,7 +373,7 @@ export class JSONRPCProcessor {
 
     logger.debug(
       { correlationId, messageCount: messages.length },
-      'Processing batch request'
+      'Processing batch request',
     );
 
     // Process all messages in parallel
@@ -381,7 +381,7 @@ export class JSONRPCProcessor {
       messages.map(async (msg, index) => {
         const msgCorrelationId = `${correlationId}_${index}`;
         return await this.processSingle(msg, msgCorrelationId);
-      })
+      }),
     );
 
     // Filter out null responses (notifications)

@@ -107,10 +107,10 @@ function validateEnvironment() {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessages = error.errors.map(
-        (err) => `${err.path.join('.')}: ${err.message}`
+        (err) => `${err.path.join('.')}: ${err.message}`,
       );
       throw new Error(
-        `Invalid environment configuration:\n${errorMessages.join('\n')}`
+        `Invalid environment configuration:\n${errorMessages.join('\n')}`,
       );
     }
     throw error;
@@ -256,7 +256,7 @@ export function validateConfiguration(): { valid: boolean; errors?: string[] } {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors = error.errors.map(
-        (err) => `${err.path.join('.')}: ${err.message}`
+        (err) => `${err.path.join('.')}: ${err.message}`,
       );
       return { valid: false, errors };
     }

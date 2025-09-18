@@ -41,7 +41,7 @@ export class AuthMiddleware {
 
   constructor(config: Partial<AuthConfig> = {}) {
     this.config = { ...DEFAULT_AUTH_CONFIG, ...config };
-    
+
     if (this.config.enabled) {
       logger.info({
         headerName: this.config.headerName,
@@ -59,7 +59,7 @@ export class AuthMiddleware {
       return this.createAnonymousContext();
     }
 
-    const apiKey = headers[this.config.headerName.toLowerCase()] || 
+    const apiKey = headers[this.config.headerName.toLowerCase()] ||
                    headers[this.config.headerName];
 
     if (!apiKey) {
@@ -126,7 +126,7 @@ export class AuthMiddleware {
    * Check if user has permission
    */
   hasPermission(context: AuthContext, permission: string): boolean {
-    return context.permissions.includes(permission) || 
+    return context.permissions.includes(permission) ||
            context.permissions.includes('*');
   }
 
@@ -180,7 +180,7 @@ export class AuthMiddleware {
     if (userId === 'user_0') {
       return ['*']; // Admin permissions
     }
-    
+
     return [
       'hurricane:read',
       'hurricane:forecast',
@@ -287,7 +287,7 @@ export const authUtils = {
     if (!authorization || !authorization.startsWith('Bearer ')) {
       return null;
     }
-    
+
     return authorization.substring(7);
   },
 
@@ -298,7 +298,7 @@ export const authUtils = {
     if (allowedOrigins.includes('*')) {
       return true;
     }
-    
+
     return allowedOrigins.includes(origin);
   },
 
@@ -306,9 +306,9 @@ export const authUtils = {
    * Extract IP address from request
    */
   extractIP(headers: Record<string, string>): string {
-    return headers['x-forwarded-for'] || 
-           headers['x-real-ip'] || 
-           headers['cf-connecting-ip'] || 
+    return headers['x-forwarded-for'] ||
+           headers['x-real-ip'] ||
+           headers['cf-connecting-ip'] ||
            'unknown';
   },
 
@@ -317,7 +317,7 @@ export const authUtils = {
    */
   createAuthChallenge(): Record<string, string> {
     return {
-      'WWW-Authenticate': `Bearer realm="Hurricane Tracker MCP"`,
+      'WWW-Authenticate': 'Bearer realm="Hurricane Tracker MCP"',
       'X-Auth-Methods': 'api-key,bearer-token',
     };
   },
