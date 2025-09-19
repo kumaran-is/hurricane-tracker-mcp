@@ -20,6 +20,7 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
     - [Installation \& Setup](#installation--setup)
       - [Option 1. Cline AI Assistant](#option-1-cline-ai-assistant)
       - [Option 2. Claude Desktop](#option-2-claude-desktop)
+    - [🧪 MCP Inspector](#-mcp-inspector)
     - [Test All Hurricane Tools](#test-all-hurricane-tools)
       - [**Quick Test - All Capabilities:**](#quick-test---all-capabilities)
       - [**Real-World Use Cases:**](#real-world-use-cases)
@@ -156,9 +157,12 @@ After adding the configuration, restart Claude Desktop to load the Hurricane Tra
 
 ![Claude Desktop](./docs/media/claudedesktop.gif)
 
-### Test All Hurricane Tools
+### 🧪 MCP Inspector
+To test and troubleshoot individual tool calls with specific parameters use MCP Inspector. **For comprehensive testing with MCP Inspector, see [MCP_INSPECTOR_TEST_GUIDE.md](docs/MCP_INSPECTOR_TEST_GUIDE.md)**.
 
-> 🧪 **For comprehensive testing with MCP Inspector, see [MCP_INSPECTOR_TEST_GUIDE.md](docs/MCP_INSPECTOR_TEST_GUIDE.md)**
+ **Note:** You can't use Natural language prompt in MCP Inspector. For Natural language prompt use Claude Desktop or Cline or other **MCP-compatible AI assistant**
+
+### Test All Hurricane Tools
 
 **Copy and paste these natural language prompts into Cline or Claude Desktop to test hurricane tracking capabilities:**
 
@@ -903,7 +907,6 @@ This project follows enterprise development standards:
 - Strict TypeScript typing
 - Comprehensive error handling
 - Production-grade logging
-- Full test coverage (coming in Phase 5)
 
 ## 📄 License
 
