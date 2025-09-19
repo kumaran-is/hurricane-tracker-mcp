@@ -112,12 +112,13 @@ Please provide:
 3. Historical data: Find all hurricanes that made landfall in the Gulf states between 2020-2024
 
 Include storm names, peak categories, and affected areas. This helps us assess regional risk patterns.
+
 ```
 
 **Marine Navigation Planning:**
+
 ```bash
 I'm sailing from Puerto Rico to Florida next week. What's the current hurricane situation?
-
 I need to know:
 - Are there any active tropical systems in the Atlantic or Caribbean?
 - What's the forecast track for any storms between Puerto Rico (18.22, -66.59) and Florida Keys (24.55, -81.78)?
@@ -127,6 +128,7 @@ Safety is my top priority, so please check thoroughly.
 ```
 
 **Scientific Research Query:**
+
 ```bash
 I'm studying climate patterns and hurricane intensification. Can you help me gather data?
 
@@ -137,9 +139,11 @@ Please find:
 4. If any current storms exist with "Rapid Intensification" noted, highlight those
 
 Present the data in a structured format suitable for research analysis.
-```bash
+
+```
 
 **Travel Planning Assistant:**
+
 ```bash
 I'm booking a vacation to Cancun for next month. Should I be worried about hurricanes?
 
@@ -153,6 +157,7 @@ I need honest advice about whether to book travel insurance.
 ```
 
 **Edge Cases & Error Testing:**
+
 ```bash
 Test the system's error handling with these requests:
 
