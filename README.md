@@ -152,6 +152,71 @@ All tools now use **true real data patterns**:
 }
 ```
 
+## Running on Docker Container
+
+#### 1. Build and Run with Docker Compose 
+
+Build the Docker image and start the container
+```bash
+docker-compose up --build
+```
+
+Or run in detached mode (background)
+```bash
+docker-compose up --build -d
+```
+
+#### 2. Verify the Service is Running
+
+Check if container is running
+```bash
+docker-compose ps
+```
+View logs
+```bash
+docker-compose logs -f
+```
+
+Test the health endpoint
+
+```bash
+curl http://localhost:8080/health
+```
+#### 3. Cline MCP Configuration for Docker 
+
+Add the following configuration to your Cline MCP settings file (`cline_mcp_settings.json`) and test all hurricane tools
+
+```json
+"hurricane-tracker-docker": {
+      "autoApprove": [
+        "get_active_storms",
+        "get_storm_cone",
+        "get_storm_track",
+        "get_local_hurricane_alerts",
+        "search_historical_tracks"
+      ],
+      "disabled": false,
+      "timeout": 30000,
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "-e",
+        "MCP_TRANSPORT=stdio",
+        "hurricane-tracker-mcp",
+        "node",
+        "dist/server.js"
+      ]
+    }
+```    
+#### 4. Stop the service
+
+```bash
+docker-compose down
+```
+
+
 ## 🔧 Development Commands
 
 ```bash
