@@ -438,6 +438,379 @@ External APIs (NHC, NWS, IBTrACS)
 - **API Integration Ready**: Structured for real NOAA/NHC API integration
 - **Performance Monitoring**: Correlation ID tracking for all operations
 
+### 📊 Data Flow Architecture
+
+```mermaid
+flowchart TB
+    %% External Entities
+    Client[["🖥️ MCP Client<br/>(Cline/Claude Desktop)"]]
+    NOAA[["🌐 NOAA/NHC APIs<br/>(External Data Sources)"]]
+
+    %% Transport Layer
+    subgraph Transport["🚀 Transport Layer (server.ts)"]
+        STDIO["📡 STDIO Transport<br/>Local AI Assistants"]
+        HTTP["🌐 HTTP Transport<br/>Fastify Server"]
+        Session["🔑 Session Manager<br/>Multi-client Support"]
+        Health["❤️ Health Monitor<br/>/health endpoint"]
+    end
+
+    %% Protocol Layer
+    subgraph Protocol["⚙️ Protocol Layer (hurricane-mcp-server.ts)"]
+        MCP["🎯 MCP Server<br/>JSON-RPC 2.0 Handler"]
+        Tools["🛠️ Tool Registry<br/>5 Hurricane Tools"]
+        Validator["✅ Schema Validator<br/>Zod Schemas"]
+        ErrorHandler["⚠️ Error Handler<br/>LLM-friendly Messages"]
+    end
+
+    %% Business Layer
+    subgraph Business["💼 Business Layer (hurricane-service.ts)"]
+        Service["🌀 Hurricane Service<br/>Domain Logic"]
+        Transform["🔄 Data Transformer<br/>NOAA → Domain Models"]
+        Correlator["🔗 Correlation Tracker<br/>Request Tracing"]
+    end
+
+    %% Supporting Components
+    subgraph Support["🔧 Supporting Components"]
+        Cache["💾 LRU Cache<br/>(hurricane-cache.ts)"]
+        Logger["📝 Pino Logger<br/>(logger-pino.ts)"]
+        Audit["🔍 Audit Logger<br/>(audit-logger.ts)"]
+        Security["🔒 Security Monitor<br/>(security-monitor.ts)"]
+        RateLimit["⏱️ Rate Limiter<br/>(rate-limit.ts)"]
+    end
+
+    %% Data Flow
+    Client -->|"MCP Request<br/>JSON-RPC 2.0"| Transport
+    Transport -->|"Route by<br/>Transport Type"| STDIO
+    Transport -->|"Route by<br/>Transport Type"| HTTP
+
+    STDIO -->|"Connect & Forward"| MCP
+    HTTP -->|"Session-based<br/>Connection"| Session
+    Session -->|"Forward Request"| MCP
+
+    MCP -->|"Tool Dispatch"| Tools
+    Tools -->|"Validate Input"| Validator
+    Validator -->|"Execute Tool"| Service
+
+    Service -->|"Fetch Data"| NOAA
+    Service <-->|"Cache Check/<br/>Store"| Cache
+    Service -->|"Log Operations"| Logger
+    Service -->|"Track Security"| Security
+    Service -->|"Audit Trail"| Audit
+
+    NOAA -->|"Raw Data"| Transform
+    Transform -->|"Domain Objects"| Service
+
+    Service -->|"Business Response"| MCP
+    MCP -->|"Format Response"| ErrorHandler
+    ErrorHandler -->|"MCP Response"| Transport
+    Transport -->|"JSON-RPC Response"| Client
+
+    Health -->|"Status Check"| Transport
+    RateLimit -->|"Throttle Requests"| Protocol
+    Correlator -->|"Track Request"| Service
+
+    %% Styling
+    classDef transportStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef protocolStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef businessStyle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef supportStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef externalStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+
+    class Transport transportStyle
+    class Protocol protocolStyle
+    class Business businessStyle
+    class Support supportStyle
+    class Client,NOAA externalStyle
+```
+
+### 🔄 Component Interaction Diagram
+
+```mermaid
+graph TB
+    subgraph "🎯 Core Architecture Components"
+        subgraph "Transport Infrastructure"
+            TS[server.ts<br/>Transport Layer]
+            STDT[StdioServerTransport]
+            HTTPT[StreamableHTTPServerTransport]
+            FAST[Fastify HTTP Server]
+        end
+
+        subgraph "Protocol Implementation"
+            MCP[hurricane-mcp-server.ts<br/>MCP Protocol Handler]
+            MCPS[McpServer Instance]
+            TR[Tool Registry]
+            VS[Validation Schemas]
+        end
+
+        subgraph "Business Logic"
+            HS[hurricane-service.ts<br/>Hurricane Service]
+            DM[Domain Models]
+            AT[API Transformers]
+        end
+
+        subgraph "Cross-Cutting Concerns"
+            subgraph "Caching"
+                HC[hurricane-cache.ts]
+                LRU[LRU Cache Manager]
+            end
+
+            subgraph "Logging"
+                PL[logger-pino.ts]
+                AL[audit-logger.ts]
+            end
+
+            subgraph "Security"
+                SM[security-monitor.ts]
+                SAN[sanitizer.ts]
+            end
+
+            subgraph "Middleware"
+                AUTH[auth.ts]
+                RL[rate-limit.ts]
+                VAL[validation.ts]
+                SANM[sanitization.ts]
+            end
+
+            subgraph "Resilience"
+                CB[circuit-breaker.ts]
+                RS[retry-strategy.ts]
+                BH[bulkhead.ts]
+            end
+
+            subgraph "Configuration"
+                CFG[config.ts]
+                ACFG[auth-config.ts]
+            end
+        end
+    end
+
+    %% Interactions
+    TS -->|initializes| STDT
+    TS -->|initializes| HTTPT
+    TS -->|creates| FAST
+
+    STDT -->|connects to| MCPS
+    HTTPT -->|connects to| MCPS
+
+    MCP -->|creates| MCPS
+    MCP -->|registers tools| TR
+    MCP -->|defines| VS
+
+    TR -->|delegates to| HS
+
+    HS -->|uses| DM
+    HS -->|applies| AT
+    HS -->|caches with| HC
+    HS -->|logs with| PL
+
+    HC -->|manages| LRU
+
+    MCP -->|audit logs| AL
+    MCP -->|security checks| SM
+
+    FAST -->|applies| AUTH
+    FAST -->|applies| RL
+
+    HS -->|validates with| VAL
+    HS -->|sanitizes with| SANM
+
+    HS -->|resilience via| CB
+    HS -->|resilience via| RS
+
+    ALL[All Components] -.->|read config| CFG
+    AUTH -.->|uses| ACFG
+
+    %% Styling
+    style TS fill:#e3f2fd,stroke:#1565c0
+    style MCP fill:#f3e5f5,stroke:#6a1b9a
+    style HS fill:#e8f5e9,stroke:#2e7d32
+    style HC fill:#fff3e0,stroke:#ef6c00
+    style PL fill:#fce4ec,stroke:#c2185b
+    style SM fill:#ffebee,stroke:#d32f2f
+```
+
+### 📋 Sequence Diagram - STDIO Transport
+
+```mermaid
+sequenceDiagram
+    participant C as MCP Client<br/>(Cline/Claude)
+    participant S as server.ts<br/>(Transport)
+    participant ST as StdioServerTransport
+    participant M as hurricane-mcp-server.ts<br/>(Protocol)
+    participant MS as McpServer
+    participant HS as hurricane-service.ts<br/>(Business)
+    participant API as NOAA/NHC APIs
+    participant Cache as LRU Cache
+    participant Log as Pino Logger
+
+    Note over C,API: STDIO Transport Flow - Direct Process Communication
+
+    %% Initialization
+    C->>+S: Launch Process (node dist/server.js)
+    S->>S: Load Config (MCP_TRANSPORT=stdio)
+    S->>+ST: new StdioServerTransport()
+    S->>+M: hurricaneMcpServer.getMcpServer()
+    M->>+MS: new McpServer({name, version})
+    M->>MS: Register 5 Hurricane Tools
+    M-->>-S: Return MCP Server Instance
+    S->>ST: mcpServer.connect(transport)
+    ST-->>C: Ready (via stdio)
+
+    %% Tool Invocation
+    C->>ST: JSON-RPC Request<br/>{"method": "tools/call",<br/>"params": {"name": "get_active_storms"}}
+    ST->>MS: Handle Request
+    MS->>M: Dispatch Tool Call
+    M->>M: Validate with Zod Schema
+
+    alt Validation Success
+        M->>+HS: getActiveStorms(args)
+        HS->>Log: Log Operation Start
+        HS->>+Cache: Check Cache
+
+        alt Cache Hit
+            Cache-->>HS: Return Cached Data
+        else Cache Miss
+            HS->>+API: GET /CurrentStorms.json
+            API-->>-HS: Storm Data (JSON)
+            HS->>HS: Transform to Domain Model
+            HS->>Cache: Store in Cache
+        end
+
+        Cache-->>-HS: Storm Data
+        HS->>Log: Log Operation Complete
+        HS-->>-M: HurricaneBasicInfo[]
+        M->>M: Format for MCP Response
+        M-->>MS: Tool Response
+        MS-->>ST: JSON-RPC Response
+        ST-->>C: {"result": {...}}
+    else Validation Failed
+        M->>M: Create LLM-friendly Error
+        M-->>MS: Error Response
+        MS-->>ST: JSON-RPC Error
+        ST-->>C: {"error": {...}}
+    end
+
+    %% Shutdown
+    C->>ST: SIGTERM/SIGINT
+    ST->>S: Graceful Shutdown
+    S->>M: hurricaneMcpServer.shutdown()
+    S->>ST: Close Transport
+    S->>Log: Log Shutdown
+    S-->>C: Process Exit
+
+    Note over C,API: Clean separation: Transport → Protocol → Business
+```
+
+### 📋 Sequence Diagram - Streamable HTTP Transport
+
+```mermaid
+sequenceDiagram
+    participant C as MCP Client<br/>(Browser/Remote)
+    participant F as Fastify Server<br/>(HTTP Endpoints)
+    participant S as server.ts<br/>(Transport)
+    participant HT as StreamableHTTPServerTransport
+    participant SM as Session Manager
+    participant M as hurricane-mcp-server.ts<br/>(Protocol)
+    participant MS as McpServer
+    participant HS as hurricane-service.ts<br/>(Business)
+    participant API as NOAA/NHC APIs
+    participant Cache as LRU Cache
+    participant RL as Rate Limiter
+    participant Audit as Audit Logger
+
+    Note over C,API: HTTP Transport Flow - Session-based Communication
+
+    %% Server Initialization
+    F->>+S: Start HTTP Server (port 8080)
+    S->>S: Load Config (MCP_TRANSPORT=http)
+    S->>F: Register CORS Plugin
+    S->>F: Setup Routes (/mcp POST/GET/DELETE, /health)
+    S->>SM: Initialize Session Store
+    F-->>S: Server Listening
+
+    %% Client Initialization
+    C->>+F: POST /mcp<br/>(No session ID)
+    F->>S: Handle Initial Request
+    S->>+HT: new StreamableHTTPServerTransport()
+    HT->>HT: Generate Session ID (UUID)
+    HT->>SM: Store Session
+    S->>+M: hurricaneMcpServer.getMcpServer()
+    M->>+MS: Get/Create MCP Server
+    M-->>-S: MCP Server Instance
+    S->>HT: mcpServer.connect(transport)
+    HT-->>F: Session ID in Header
+    F-->>-C: Response + Mcp-Session-Id Header
+
+    %% Authenticated Tool Call
+    C->>+F: POST /mcp<br/>Header: mcp-session-id: xyz<br/>Body: {"method": "tools/call",<br/>"params": {"name": "get_storm_cone",<br/>"arguments": {"stormId": "AL052024"}}}
+    F->>RL: Check Rate Limit
+
+    alt Rate Limit OK
+        RL-->>F: Proceed
+        F->>SM: Validate Session
+        SM-->>F: Session Valid
+        F->>HT: handleRequest(request, response, body)
+        HT->>MS: Process JSON-RPC
+        MS->>M: Dispatch Tool
+        M->>M: Validate Input (Zod)
+        M->>Audit: Log Tool Invocation
+
+        M->>+HS: getStormCone({stormId: "AL052024"})
+        HS->>+Cache: Check Cache Key
+
+        alt Cache Miss
+            HS->>+API: GET /storm/AL052024/cone
+            API-->>-HS: Cone Data (GeoJSON)
+            HS->>HS: Transform & Validate
+            HS->>Cache: Store with TTL
+        end
+
+        Cache-->>-HS: Cone Data
+        HS-->>-M: StormCone Object
+        M->>M: Format MCP Response
+        M->>Audit: Log Success
+        M-->>MS: Tool Result
+        MS-->>HT: JSON-RPC Response
+        HT-->>F: Formatted Response
+        F-->>-C: {"jsonrpc": "2.0", "result": {...}}
+    else Rate Limit Exceeded
+        RL-->>F: Reject (429)
+        F-->>C: {"error": "Rate limit exceeded"}
+    end
+
+    %% Server-Sent Events (SSE)
+    C->>+F: GET /mcp<br/>Header: mcp-session-id: xyz
+    F->>SM: Get Session Transport
+    SM-->>F: Transport Instance
+    F->>HT: Setup SSE Stream
+    HT-->>F: Event Stream
+    F-->>C: SSE Connection Established
+
+    Note over C,F: Keep-alive for notifications
+
+    loop Server Notifications
+        MS->>HT: Notification Event
+        HT->>F: SSE Message
+        F-->>C: data: {"notification": ...}
+    end
+
+    %% Session Termination
+    C->>+F: DELETE /mcp<br/>Header: mcp-session-id: xyz
+    F->>SM: Get Session
+    F->>HT: handleRequest(DELETE)
+    HT->>MS: Close Connection
+    HT->>SM: Remove Session
+    SM-->>F: Session Cleared
+    F-->>-C: 204 No Content
+
+    %% Health Check
+    C->>+F: GET /health
+    F->>S: Get Server Status
+    S-->>F: {status: "healthy", uptime: 12345, sessions: 3}
+    F-->>-C: Health Status JSON
+
+    Note over C,API: Session-based, Rate-limited, Audited
+
 ## 🤝 Contributing
 
 This project follows enterprise development standards:
