@@ -2,37 +2,52 @@
 
 A production-grade LLM-friendly Model Context Protocol (MCP) server that provides real-time hurricane tracking, forecast cones, local alerts, and historical storm data through MCP tools for AI assistants like Cline.
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kumaran-is/hurricane-tracker-mcp)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
+[![Fastify](https://img.shields.io/badge/Fastify-5.6-black)](https://fastify.dev/)
+[![MCP SDK](https://img.shields.io/badge/MCP%20SDK-Latest-orange)](https://modelcontextprotocol.io/)
+[![Zod](https://img.shields.io/badge/Zod-3.23-purple)](https://zod.dev/)
+[![SOLID](https://img.shields.io/badge/Architecture-SOLID-green)](https://en.wikipedia.org/wiki/SOLID)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
 ## 📑 Table of Contents
 
-- [Quick Start](#quick-start)
-  - [Prerequisites](#prerequisites)
-  - [Installation & Setup](#installation--setup)
-    - [Option 1: Cline AI Assistant](#option-1-cline-ai-assistant)
-    - [Option 2: Claude Desktop](#option-2-claud-desktop)
-  - [Test All Hurricane Tools](#test-all-hurricane-tools)
-    - [Quick Test - All Capabilities](#quick-test---all-capabilities)
-    - [Real-World Use Cases](#real-world-use-cases)
-    - [Individual Test Scenarios](#individual-test-scenarios)
-    - [Expected Real Data Behavior](#expected-real-data-behavior)
-    - [Expected Results](#expected-results)
-- [🌀 Available Hurricane Tools](#-available-hurricane-tools)
-  - [Detailed Examples](#detailed-examples)
-- [Running on Docker Container](#running-on-docker-container)
-  - [Build and Run with Docker Compose](#1-build-and-run-with-docker-compose)
-  - [Verify the Service is Running](#2-verify-the-service-is-running)
-  - [Cline MCP Configuration for Docker](#3-cline-mcp-configuration-for-docker)
-  - [Stop the Service](#4-stop-the-service)
-- [🔧 Development Commands](#-development-commands)
-- [📊 Expected Test Results](#-expected-test-results)
-- [🏗️ Architecture](#️-architecture)
-  - [📊 Data Flow Architecture](#-data-flow-architecture)
-  - [🔄 Component Interaction Diagram](#-component-interaction-diagram)
-  - [📋 Sequence Diagram - STDIO Transport](#-sequence-diagram---stdio-transport)
-  - [📋 Sequence Diagram - Streamable HTTP Transport](#-sequence-diagram---streamable-http-transport)
-  - [Perfect 3-Layer Architecture](#perfect-3-layer-architecture-gold-standard-implementation)
-  - [Core Components - SOLID Implementation](#core-components---solid-implementation)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
+- [🌀 Hurricane Tracker MCP Server](#-hurricane-tracker-mcp-server)
+  - [📑 Table of Contents](#-table-of-contents)
+  - [Quick Start](#quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Installation \& Setup](#installation--setup)
+      - [Option 1. Cline AI Assistant](#option-1-cline-ai-assistant)
+      - [Option 2. Claude Desktop](#option-2-claude-desktop)
+    - [Test All Hurricane Tools](#test-all-hurricane-tools)
+      - [**Quick Test - All Capabilities:**](#quick-test---all-capabilities)
+      - [**Real-World Use Cases:**](#real-world-use-cases)
+      - [**Individual Test Scenarios:**](#individual-test-scenarios)
+      - [**Expected Real Data Behavior:**](#expected-real-data-behavior)
+      - [**Expected Results:**](#expected-results)
+  - [🌀 Available Hurricane Tools](#-available-hurricane-tools)
+    - [Detailed Examples](#detailed-examples)
+  - [📚 Documentation](#-documentation)
+  - [Running on Docker Container](#running-on-docker-container)
+      - [1. Build and Run with Docker Compose](#1-build-and-run-with-docker-compose)
+      - [2. Verify the Service is Running](#2-verify-the-service-is-running)
+      - [3. Cline MCP Configuration for Docker](#3-cline-mcp-configuration-for-docker)
+      - [4. Stop the service](#4-stop-the-service)
+  - [🔧 Development Commands](#-development-commands)
+  - [📊 Expected Test Results](#-expected-test-results)
+  - [🏗️ Architecture](#️-architecture)
+    - [📊 Data Flow Architecture](#-data-flow-architecture)
+    - [🔄 Component Interaction Diagram](#-component-interaction-diagram)
+    - [📋 Sequence Diagram - STDIO Transport](#-sequence-diagram---stdio-transport)
+    - [📋 Sequence Diagram - Streamable HTTP Transport](#-sequence-diagram---streamable-http-transport)
+    - [**Perfect 3-Layer Architecture (Gold Standard Implementation)**](#perfect-3-layer-architecture-gold-standard-implementation)
+    - [**Core Components - SOLID Implementation**](#core-components---solid-implementation)
+      - [**🔧 server.ts** - Transport Layer \& Infrastructure Management](#-serverts---transport-layer--infrastructure-management)
+      - [**🌐 hurricane-mcp-server.ts** - Protocol Layer \& MCP Compliance Engine](#-hurricane-mcp-serverts---protocol-layer--mcp-compliance-engine)
+      - [**🌀 hurricane-service.ts** - Business Layer \& Domain Logic Engine](#-hurricane-servicets---business-layer--domain-logic-engine)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
 
 ## Quick Start
 
@@ -58,6 +73,8 @@ npm run build
 ```
 
 #### Option 1. Cline AI Assistant
+
+> 📖 **For detailed setup instructions, see [CLINE_SETUP.md](docs/CLINE_SETUP.md)**
 
 Add the following configuration to your Cline MCP settings file (`cline_mcp_settings.json`):
 
@@ -93,7 +110,9 @@ Add the following configuration to your Cline MCP settings file (`cline_mcp_sett
 
 After adding the configuration, restart Cline to load the Hurricane Tracker MCP Server.
 
-#### Option 2. Claud Desktop
+#### Option 2. Claude Desktop
+
+> 📖 **For detailed setup instructions, see [CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)**
 
 Add the following configuration to your Claude Desktop MCP settings file (`claude_desktop_config.json`):
 
@@ -122,6 +141,8 @@ Add the following configuration to your Claude Desktop MCP settings file (`claud
 After adding the configuration, restart Claude Desktop to load the Hurricane Tracker MCP Server.
 
 ### Test All Hurricane Tools
+
+> 🧪 **For comprehensive testing with MCP Inspector, see [MCP_INSPECTOR_TEST_GUIDE.md](docs/MCP_INSPECTOR_TEST_GUIDE.md)**
 
 **Copy and paste these natural language prompts into Cline to test hurricane tracking capabilities:**
 
@@ -320,6 +341,12 @@ All tools now use **true real data patterns**:
   "basin": "AL"
 }
 ```
+
+## 📚 Documentation
+
+- **[CLINE_SETUP.md](docs/CLINE_SETUP.md)** - Complete setup guide for Cline (VS Code extension)
+- **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)** - Complete setup guide for Claude Desktop
+- **[MCP_INSPECTOR_TEST_GUIDE.md](docs/MCP_INSPECTOR_TEST_GUIDE.md)** - Comprehensive testing guide with MCP Inspector
 
 ## Running on Docker Container
 
