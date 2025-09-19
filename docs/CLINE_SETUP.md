@@ -33,7 +33,7 @@ All configurations provide access to these 5 hurricane tracking tools:
         "run",
         "stdio"
       ],
-      "cwd": "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp",
+      "cwd": "/path/to/your/mydrive/personal/hurricane-tracker-mcp",
       "env": {
         "MCP_TRANSPORT": "stdio"
       },
@@ -72,7 +72,7 @@ Build and Runs MCP server directly using Node.js
     "hurricane-tracker": {
       "command": "node",
       "args": [
-        "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp/dist/server.js"
+        "/path/to/your/mydrive/personal/hurricane-tracker-mcp/dist/server.js"
       ],
       "env": {
         "MCP_TRANSPORT": "stdio",

@@ -12,19 +12,21 @@ This guide provides instructions for configuring Hurricane Tracker MCP with Clau
 
 ---
 
-## Option 1: Stdio Transport (Simplest Setup)
+## Option 1: Stdio Transport (Simplest Setup)- Direct node approach 
 
 ### Overview
 - Runs the MCP server directly via Node.js
+- Slightly faster startup, explicit Node version
 - No Docker required
 - Direct stdio communication with Claude Desktop
 - Best for development and testing
 
 ### Prerequisites
 1. Node.js installed (v22+ recommended)
-2. Project dependencies installed:
-   cd /YOURPATH/hurricane-tracker-mcp
+2. Clone the repo:
+
    ```bash
+   https://github.com/kumaran-is/hurricane-tracker-mcp.git
    npm install
    npm run build
    ```
@@ -37,9 +39,9 @@ This guide provides instructions for configuring Hurricane Tracker MCP with Clau
  {
     "mcpServers": {
       "hurricane-tracker-mcp": {
-        "command": "/Users/kumaraniyyasamysrinivasan/.nvm/versions/node/v22.15.0/bin/node",
+        "command": "/path/to/your/.nvm/versions/node/v22.15.0/bin/node",
         "args": [
-          "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp/dist/server.js"
+          "/path/to/your/mydrive/personal/hurricane-tracker-mcp/dist/server.js"
         ],
         "env": {
           "MCP_TRANSPORT": "stdio",
@@ -65,7 +67,14 @@ This guide provides instructions for configuring Hurricane Tracker MCP with Clau
 
 ### Prerequisites
 1. Docker Desktop installed and running
-2. Build and start the container:
+2. Clone the repo:
+
+   ```bash
+   https://github.com/kumaran-is/hurricane-tracker-mcp.git
+   npm install
+   npm run build
+   ```
+3. Build and start the container:
 cd  /YOURPATH/hurricane-tracker-mcp
    ```bash
    docker-compose up --build -d
@@ -81,7 +90,7 @@ Since Claude Desktop expects stdio, we use a bridge script to connect to the HTT
     "hurricane-tracker-mcp": {
       "command": "node",
       "args": [
-        "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp/stdio-http-bridge.js"
+        "/path/to/your/mydrive/personal/hurricane-tracker-mcp/stdio-http-bridge.js"
       ]
     }
   }
