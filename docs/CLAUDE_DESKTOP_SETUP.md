@@ -31,11 +31,13 @@ This guide provides instructions for configuring Hurricane Tracker MCP with Clau
 
 ### Configuration in claude_desktop_config.json
 
+**IMPORTANT**: Use the full path to Node.js v22+ to avoid version conflicts.
+
 ```json
 {
   "mcpServers": {
     "hurricane-tracker-mcp": {
-      "command": "node",
+      "command": "/Users/kumaraniyyasamysrinivasan/.nvm/versions/node/v22.15.0/bin/node",
       "args": [
         "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp/dist/server.js"
       ],
@@ -49,6 +51,8 @@ This guide provides instructions for configuring Hurricane Tracker MCP with Clau
   }
 }
 ```
+
+**Note**: Replace the Node.js path with your actual Node v22+ installation path. You can find it with: `which node`
 
 ## Option 2: Streamable HTTP Transport (Docker-based)
 
