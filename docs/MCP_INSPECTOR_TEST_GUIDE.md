@@ -460,25 +460,6 @@ This guide provides comprehensive test cases for all 5 Hurricane Tracker MCP too
    - Verify coordinate ranges
    - Use correct date format (YYYY-MM-DD)
 
-## Automated Testing
-
-For automated testing, use the provided test script:
-
-```bash
-# Run comprehensive test suite
-node test-mcp-comprehensive.cjs
-
-# Test specific functionality
-node test-basin-filter.cjs
-```
-
-These scripts test all tools programmatically and validate:
-- Response format consistency
-- LLM-friendly messages
-- Error handling
-- Case-insensitive inputs
-- Edge cases
-
 ## Summary
 
 All 5 tools should:

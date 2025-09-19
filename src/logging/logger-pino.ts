@@ -26,17 +26,8 @@ const loggerConfig: pino.LoggerOptions = {
     bindings: () => ({}),
   },
   timestamp: pino.stdTimeFunctions.isoTime,
-  // Pretty print in development
-  transport: envConfig.prettyLogs
-    ? {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss Z',
-        ignore: 'pid,hostname',
-      },
-    }
-    : undefined,
+  // Disable pino-pretty transport in production to avoid dependency issues
+  // pino-pretty is a dev dependency and not available in production container
 };
 
 /**

@@ -84,7 +84,7 @@ const envSchema = z.object({
   // Development Settings
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DEBUG_MODE: z.coerce.boolean().default(false),
-  PRETTY_LOGS: z.coerce.boolean().default(true),
+  PRETTY_LOGS: z.coerce.boolean().default(false),
 
   // Feature Flags
   ENABLE_HISTORICAL_SEARCH: z.coerce.boolean().default(true),
