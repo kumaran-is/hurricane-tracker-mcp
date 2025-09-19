@@ -19,10 +19,41 @@ All configurations provide access to these 5 hurricane tracking tools:
 ## Option 1: Direct Stdio Transport (Simplest)
 
 ### Overview
-- Runs MCP server directly via Node.js
+- Runs MCP server directly via NPM scripts
 - No Docker required
 - Fastest startup time
 - Best for development
+
+```json
+{
+  "mcpServers": {
+    "hurricane-tracker": {
+      "command": "npm",
+      "args": [
+        "run",
+        "stdio"
+      ],
+      "cwd": "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp",
+      "env": {
+        "MCP_TRANSPORT": "stdio"
+      },
+      "autoApprove": [
+        "get_active_storms",
+        "get_storm_cone",
+        "get_storm_track",
+        "get_local_hurricane_alerts",
+        "search_historical_tracks"
+      ],
+      "disabled": false,
+      "timeout": 30000,
+      "type": "stdio"
+    }
+  }
+}
+```
+### Alternative: Using npm script
+
+Build and Runs MCP server directly using Node.js
 
 ### Prerequisites
 1. Node.js installed (v22+ recommended)
@@ -74,36 +105,6 @@ Maximum time (in milliseconds) to wait for a response:
 Toggle to temporarily disable the MCP server:
 ```json
 "disabled": false  // Set to true to disable without removing config
-```
-
-### Alternative: Using npm script
-
-```json
-{
-  "mcpServers": {
-    "hurricane-tracker": {
-      "command": "npm",
-      "args": [
-        "run",
-        "stdio"
-      ],
-      "cwd": "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp",
-      "env": {
-        "MCP_TRANSPORT": "stdio"
-      },
-      "autoApprove": [
-        "get_active_storms",
-        "get_storm_cone",
-        "get_storm_track",
-        "get_local_hurricane_alerts",
-        "search_historical_tracks"
-      ],
-      "disabled": false,
-      "timeout": 30000,
-      "type": "stdio"
-    }
-  }
-}
 ```
 
 ---

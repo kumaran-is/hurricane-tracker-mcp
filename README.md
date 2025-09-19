@@ -35,16 +35,25 @@ Add the following configuration to your Cline MCP settings file (`cline_mcp_sett
 {
   "mcpServers": {
     "hurricane-tracker": {
-      "disabled": false,
-      "timeout": 30000,
       "command": "npm",
-      "args": ["run", "stdio"],
+      "args": [
+        "run",
+        "stdio"
+      ],
       "cwd": "/path/to/your/hurricane-tracker-mcp",
       "env": {
-        "NODE_ENV": "development",
-        "LOG_LEVEL": "info",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "autoApprove": [
+        "get_active_storms",
+        "get_storm_cone",
+        "get_storm_track",
+        "get_local_hurricane_alerts",
+        "search_historical_tracks"
+      ],
+      "disabled": false,
+      "timeout": 30000,
+      "type": "stdio"
     }
   }
 }
