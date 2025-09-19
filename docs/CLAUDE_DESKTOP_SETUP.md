@@ -1,44 +1,205 @@
 # Claude Desktop Configuration for Hurricane Tracker MCP
 
-## Current Configuration
+This guide provides instructions for configuring Hurricane Tracker MCP with Claude Desktop using two different transport methods:
+1. **Stdio Transport** (Direct Node.js execution - Simple setup)
+2. **Streamable HTTP Transport** (Docker container - Production ready)
 
-The Hurricane Tracker MCP is now configured to use **HTTP transport** (streamable) instead of stdio transport.
+## Configuration File Location
 
-### Configuration Details
-- **Transport Type**: HTTP (Streamable)
-- **URL**: http://localhost:8080/mcp
-- **Port**: 8080
-- **Configuration File**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/claude/claude_desktop_config.json`
 
-## Prerequisites
+---
 
-1. **Docker must be running** with the Hurricane Tracker container:
+## Option 1: Stdio Transport (Simplest Setup)
+
+### Overview
+- Runs the MCP server directly via Node.js
+- No Docker required
+- Direct stdio communication with Claude Desktop
+- Best for development and testing
+
+### Prerequisites
+1. Node.js installed (v18+ recommended)
+2. Project dependencies installed:
    ```bash
    cd /Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp
-   docker-compose up -d
+   npm install
+   npm run build
    ```
 
-2. **Verify the container is healthy**:
-   ```bash
-   docker ps | grep hurricane-tracker-mcp
-   curl http://localhost:8080/health
-   ```
-
-## Configuration in claude_desktop_config.json
+### Configuration in claude_desktop_config.json
 
 ```json
 {
   "mcpServers": {
     "hurricane-tracker-mcp": {
-      "transport": {
-        "type": "http",
-        "url": "http://localhost:8080/mcp"
-      },
-      "name": "Hurricane Tracker MCP",
-      "description": "Real-time hurricane tracking and historical data analysis via NOAA/NHC APIs"
+      "command": "node",
+      "args": [
+        "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp/dist/server.js"
+      ],
+      "env": {
+        "MCP_TRANSPORT": "stdio",
+        "NODE_ENV": "production",
+        "PRETTY_LOGS": "false",
+        "LOG_LEVEL": "info"
+      }
     }
   }
 }
+```
+
+### Quick Test
+```bash
+# Test the stdio server directly
+cd /Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp
+MCP_TRANSPORT=stdio node dist/server.js
+# Type: {"jsonrpc":"2.0","method":"initialize","params":{},"id":1}
+# Should return initialization response
+```
+
+---
+
+## Option 2: Streamable HTTP Transport (Docker-based)
+
+### Overview
+- Runs in Docker container
+- HTTP-based communication on port 8080
+- Better for production deployment
+- Supports multiple clients simultaneously
+
+### Prerequisites
+1. Docker Desktop installed and running
+2. Build and start the container:
+   ```bash
+   cd /Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp
+   docker-compose up --build -d
+   ```
+
+### Configuration in claude_desktop_config.json
+
+Since Claude Desktop expects stdio, we use a bridge script to connect to the HTTP server:
+
+```json
+{
+  "mcpServers": {
+    "hurricane-tracker-mcp": {
+      "command": "node",
+      "args": [
+        "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp/stdio-http-bridge.js"
+      ]
+    }
+  }
+}
+```
+
+### Create the Bridge Script (if not exists)
+
+Create file `stdio-http-bridge.js` in the project root:
+
+```javascript
+#!/usr/bin/env node
+
+const http = require('http');
+const readline = require('readline');
+
+const MCP_HTTP_URL = 'http://localhost:8080/mcp';
+let sessionId = null;
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false
+});
+
+rl.on('line', async (line) => {
+  try {
+    const request = JSON.parse(line);
+    const response = await forwardToHTTP(request);
+    process.stdout.write(JSON.stringify(response) + '\n');
+  } catch (error) {
+    const errorResponse = {
+      jsonrpc: '2.0',
+      error: { code: -32603, message: error.message },
+      id: null
+    };
+    process.stdout.write(JSON.stringify(errorResponse) + '\n');
+  }
+});
+
+async function forwardToHTTP(request) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(request);
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/event-stream',
+      'Content-Length': Buffer.byteLength(body)
+    };
+
+    if (sessionId) headers['mcp-session-id'] = sessionId;
+
+    const req = http.request({
+      hostname: 'localhost',
+      port: 8080,
+      path: '/mcp',
+      method: 'POST',
+      headers
+    }, (res) => {
+      let data = '';
+
+      if (!sessionId && res.headers['mcp-session-id']) {
+        sessionId = res.headers['mcp-session-id'];
+      }
+
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const lines = data.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              resolve(JSON.parse(line.substring(6)));
+              return;
+            }
+          }
+          resolve(JSON.parse(data));
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+process.stderr.write('Hurricane Tracker MCP stdio-to-HTTP bridge started\n');
+```
+
+Make it executable:
+```bash
+chmod +x stdio-http-bridge.js
+```
+
+### Docker Container Management
+
+```bash
+# Start container
+docker-compose up -d
+
+# Check status
+docker ps | grep hurricane-tracker-mcp
+
+# View logs
+docker logs hurricane-tracker-mcp
+
+# Stop container
+docker-compose down
+
+# Rebuild after changes
+docker-compose up --build -d
 ```
 
 ## Available Tools
@@ -51,25 +212,21 @@ Once connected, Claude Desktop will have access to these 5 hurricane tracking to
 4. **get_local_hurricane_alerts** - Get hurricane alerts for a specific location
 5. **search_historical_tracks** - Search historical hurricane data within an area
 
-## Starting the Service
+---
 
-### Quick Start
-```bash
-# Navigate to project directory
-cd /Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp
+## Switching Between Transports
 
-# Start the Docker container
-docker-compose up -d
+### To Use Stdio Transport
+1. Update `claude_desktop_config.json` with stdio configuration
+2. Ensure project is built: `npm run build`
+3. Restart Claude Desktop
 
-# Check status
-docker ps
-curl http://localhost:8080/health
-```
+### To Use HTTP Transport
+1. Start Docker container: `docker-compose up -d`
+2. Update `claude_desktop_config.json` with bridge configuration
+3. Restart Claude Desktop
 
-### Stopping the Service
-```bash
-docker-compose down
-```
+---
 
 ## Restart Claude Desktop
 
@@ -87,21 +244,41 @@ In Claude Desktop, you can verify the MCP is connected by:
 
 ## Troubleshooting
 
-### If MCP doesn't connect:
+### For Stdio Transport Issues
+
+1. **Check Node.js installation**:
+   ```bash
+   node --version  # Should be v18+
+   ```
+
+2. **Verify build**:
+   ```bash
+   cd /Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp
+   npm run build
+   ls -la dist/server.js
+   ```
+
+3. **Test directly**:
+   ```bash
+   MCP_TRANSPORT=stdio node dist/server.js
+   # Type: {"jsonrpc":"2.0","method":"initialize","params":{},"id":1}
+   ```
+
+### For HTTP Transport Issues
 
 1. **Check Docker is running**:
    ```bash
    docker ps | grep hurricane-tracker-mcp
    ```
 
-2. **Check the health endpoint**:
+2. **Check health endpoint**:
    ```bash
    curl http://localhost:8080/health
    ```
 
 3. **Check Docker logs**:
    ```bash
-   docker logs hurricane-tracker-mcp
+   docker logs hurricane-tracker-mcp --tail 50
    ```
 
 4. **Rebuild if needed**:
@@ -110,32 +287,69 @@ In Claude Desktop, you can verify the MCP is connected by:
    docker-compose up --build -d
    ```
 
-### Common Issues:
+### Common Issues
 
-- **Port 8080 already in use**: Stop other services using port 8080 or change the port in docker-compose.yml and .env
-- **Container keeps restarting**: Check logs with `docker logs hurricane-tracker-mcp`
-- **Connection refused**: Ensure Docker Desktop is running and the container is healthy
+- **"Command not found"**: Use absolute paths in configuration
+- **Port 8080 in use**: Change port in docker-compose.yml and .env
+- **Container restarting**: Check `docker logs` for errors
+- **JSON parse errors**: Verify claude_desktop_config.json syntax
+- **MCP not showing**: Restart Claude Desktop completely
 
 ## Environment Configuration
 
-The service uses environment variables from `.env` file. Key settings:
-- `HTTP_PORT=8080` - HTTP server port
-- `HTTP_HOST=0.0.0.0` - Listen on all interfaces
-- `MCP_TRANSPORT=http` - Use HTTP transport
-- `NODE_ENV=production` - Production mode
-- `PRETTY_LOGS=false` - Disable pretty logging in production
+### Key Environment Variables
+
+The service uses environment variables from `.env` file:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MCP_TRANSPORT` | `http` | Transport type: `stdio` or `http` |
+| `HTTP_PORT` | `8080` | HTTP server port |
+| `HTTP_HOST` | `0.0.0.0` | Listen interface |
+| `NODE_ENV` | `production` | Environment mode |
+| `PRETTY_LOGS` | `false` | Pretty logging (false in production) |
+| `LOG_LEVEL` | `info` | Logging level: debug, info, warn, error |
 
 ## Testing the Connection
 
 Once Claude Desktop is restarted, test with these queries:
+
+### Basic Queries
 - "What hurricanes are currently active?"
 - "Show me storms in the Atlantic basin"
-- "Get alerts for Miami, Florida"
-- "Search for hurricanes in the Gulf of Mexico in 2024"
+- "Are there any storms near Florida?"
+
+### Advanced Queries
+- "Get the forecast cone for storm AL072025"
+- "Show track history for Hurricane Milton"
+- "Search for major hurricanes in the Gulf of Mexico in 2024"
+- "Find all Category 5 storms from last year"
+
+## Comparison: Stdio vs HTTP Transport
+
+| Feature | Stdio Transport | HTTP Transport |
+|---------|----------------|----------------|
+| **Setup Complexity** | Simple | Requires Docker |
+| **Dependencies** | Node.js only | Docker + Node.js |
+| **Startup Time** | Fast (~1s) | Slower (~5s) |
+| **Resource Usage** | Low | Higher (container) |
+| **Multiple Clients** | No | Yes |
+| **Session Management** | No | Yes |
+| **Production Ready** | Development | Yes |
+| **Debugging** | Easy | Via Docker logs |
+
+## Best Practices
+
+1. **For Development**: Use stdio transport for simplicity
+2. **For Production**: Use HTTP transport with Docker
+3. **For Testing**: Have both configurations ready to switch
+4. **Monitor Logs**: Check Claude Desktop logs at `~/Library/Logs/Claude/`
+5. **Keep Updated**: Regularly update dependencies and rebuild
 
 ## Notes
 
-- The HTTP transport provides better stability and session management than stdio
-- The server maintains persistent sessions for better performance
-- All 5 tools are fully functional and return LLM-friendly responses
+- All 5 tools are fully functional with both transports
 - Case-insensitive input is supported for storm IDs and basin codes
+- The server caches API responses for better performance
+- LLM-friendly responses with helpful error messages
+- Basin codes: AL (Atlantic), EP (Eastern Pacific), WP (Western Pacific), etc.

@@ -61,37 +61,136 @@ After adding the configuration, restart Cline to load the Hurricane Tracker MCP 
 **Copy and paste these natural language prompts into Cline to test hurricane tracking capabilities:**
 
 #### **Quick Test - All Capabilities:**
+
+```bash
+I'm planning a trip to the Caribbean and Gulf Coast region. Can you give me a complete hurricane safety briefing?
+
+First, show me ALL currently active tropical storms and hurricanes globally - I want to see their names, categories, wind speeds, and current locations.
+
+Next, check these specific cities for any hurricane warnings, watches, or tropical storm alerts:
+- Miami, Florida (coordinates: 25.76, -80.19)
+- New Orleans, Louisiana (29.95, -90.07)  
+- Houston, Texas (29.76, -95.37)
+- Cancun, Mexico (21.16, -86.85)
+
+For any active storms you find, please show me:
+- Their 5-day forecast cone and predicted path
+- Where they've traveled so far (historical track)
+- Which coastal areas might be impacted
+
+Also, I'm curious about hurricane patterns - can you search for all major hurricanes (Category 3+) that passed through the Gulf of Mexico area between January 1, 2020 and December 31, 2024? The Gulf area roughly covers coordinates from -98 to -82 longitude and 18 to 31 latitude.
+
+Finally, if there are NO active storms right now, that's useful to know too - just let me know the Atlantic is quiet.
+
+Format the response in a clear, organized way that I can easily understand for travel planning.
 ```
-I need a comprehensive hurricane status report:
 
-1. Show me all active tropical storms and hurricanes worldwide
-2. Check if Miami has any current hurricane warnings or watches  
-3. Find all hurricanes that passed through the Gulf of Mexico between 2020 and 2024
-4. If there are any active storms, show me their forecast path and uncertainty cone
-5. For any active storms, also show their historical track so far
+#### **🌊 Real-World Use Cases:**
 
-Please include all available data from weather services.
+**Emergency Preparedness Check:**
+```bash
+My family lives along the US East Coast from Florida to North Carolina. Are there any active hurricanes or tropical storms that could affect this region in the next week? 
+
+Check for:
+- Any storms currently in the Atlantic Ocean
+- Active weather alerts for major cities like Miami, Jacksonville, Charleston, and Wilmington
+- If storms exist, show their predicted paths
+
+This is for emergency preparedness planning, so please be thorough.
+```
+
+**Insurance Risk Assessment:**
+```bash
+I work for an insurance company and need hurricane risk data for property assessments.
+
+Please provide:
+1. All currently active storms globally with their intensities
+2. Specific alerts for these high-risk areas:
+   - Southern Florida (Miami-Dade County area)
+   - Louisiana Gulf Coast (New Orleans region)
+   - Texas Coast (Houston/Galveston area)
+3. Historical data: Find all hurricanes that made landfall in the Gulf states between 2020-2024
+
+Include storm names, peak categories, and affected areas. This helps us assess regional risk patterns.
+```
+
+**Marine Navigation Planning:**
+```bash
+I'm sailing from Puerto Rico to Florida next week. What's the current hurricane situation?
+
+I need to know:
+- Are there any active tropical systems in the Atlantic or Caribbean?
+- What's the forecast track for any storms between Puerto Rico (18.22, -66.59) and Florida Keys (24.55, -81.78)?
+- Have there been any recent storms in this corridor in the past month?
+
+Safety is my top priority, so please check thoroughly.
+```
+
+**Scientific Research Query:**
+```bash
+I'm studying climate patterns and hurricane intensification. Can you help me gather data?
+
+Please find:
+1. All active tropical cyclones worldwide - separate them by ocean basin (Atlantic, Pacific, Indian)
+2. For the Atlantic basin specifically, show storms in order of intensity
+3. Search for historical hurricane tracks in the Caribbean Sea region (bounded by 10-25°N, 60-90°W) from 2020 to present
+4. If any current storms exist with "Rapid Intensification" noted, highlight those
+
+Present the data in a structured format suitable for research analysis.
+```bash
+
+**Travel Planning Assistant:**
+```bash
+I'm booking a vacation to Cancun for next month. Should I be worried about hurricanes?
+
+Can you:
+- Check if there are any active storms that might head toward the Yucatan Peninsula
+- Look for current weather alerts for Cancun and Cozumel
+- Search for historical patterns - what hurricanes hit this area in the past 5 years during the same month?
+- Give me a risk assessment in plain language
+
+I need honest advice about whether to book travel insurance.
+```
+
+**Edge Cases & Error Testing:**
+```bash
+Test the system's error handling with these requests:
+
+1. Check for hurricane alerts at these unusual coordinates:
+   - North Pole: latitude 90, longitude 0
+   - Middle of Pacific: latitude 0, longitude -180
+   - Invalid location: latitude 95, longitude 200
+
+2. Search for historical storms with impossible dates:
+   - Future dates: January 2030 to December 2035
+   - Very old dates: January 1800 to December 1850
+
+3. Request storm data for a non-existent storm ID like "XX992099"
+
+4. Ask for the forecast cone of a storm when no storms are active
+
+Show me how the system handles these edge cases gracefully.
 ```
 
 #### **Individual Test Scenarios:**
 
 **Test 1 - Current Storm Activity:**
-```
+```bash
 What tropical storms and hurricanes are currently active around the world? I'm particularly interested in any storms in the Atlantic basin.
 ```
 
 **Test 2 - Storm Forecast Information:**
-```
+```bash
 Are there any active hurricanes right now? If so, I'd like to see the forecast cone showing where the storm might go over the next 5 days.
 ```
 
 **Test 3 - Storm Movement History:**
-```
+```bash
 Can you show me the path that any currently active hurricanes have taken so far? I want to see where they've been.
 ```
 
 **Test 4 - Location-Specific Alerts:**
-```
+```bash
 Please check these cities for any hurricane-related warnings or watches:
 - Miami, Florida
 - New Orleans, Louisiana  
@@ -100,7 +199,7 @@ Also test what happens with invalid coordinates like latitude 95, longitude 200.
 ```
 
 **Test 5 - Historical Hurricane Data:**
-```
+```bash
 I'm researching hurricanes in the Gulf of Mexico. Can you find all storms that passed through the Gulf between January 2020 and December 2024? Focus on Atlantic basin storms.
 ```
 
