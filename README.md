@@ -810,6 +810,7 @@ sequenceDiagram
     F-->>-C: Health Status JSON
 
     Note over C,API: Session-based, Rate-limited, Audited
+```
 
 ## 🤝 Contributing
 
