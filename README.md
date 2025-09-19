@@ -390,54 +390,6 @@ When testing with the prompt above, you should see:
 
 ## 🏗️ Architecture
 
-The Hurricane Tracker MCP Server implements **exemplary SOLID principles** with perfect separation of concerns across 3 distinct layers:
-
-### **Perfect 3-Layer Architecture (Gold Standard Implementation)**
-
-- `server.ts`: **ONLY** handles transport and infrastructure
-- `hurricane-mcp-server.ts`: **ONLY** handles MCP protocol compliance  
-- `hurricane-service.ts`: **ONLY** handles hurricane business logic
-  
-```
-Client (Cline) or AI Agent
-    ↓ (MCP Protocol Messages)
-server.ts (Transport Layer)
-    ↓ (Clean Delegation)
-hurricane-mcp-server.ts (Protocol Layer)
-    ↓ (Plain Business Requests)
-hurricane-service.ts (Business Layer)
-    ↓ (HTTP Requests)
-External APIs (NHC, NWS, IBTrACS)
-```
-
-### **Core Components - SOLID Implementation**
-
-#### **🔧 server.ts** - Transport Layer & Infrastructure Management
-**Role**: Pure Infrastructure & Transport Orchestration
-- **Fastify-Powered HTTP Transport**: High-performance with session management
-- **Dual Transport Support**: stdio (4ms startup) + Streamable HTTP (58ms startup)
-- **Perfect Delegation**: Zero protocol concerns - pure infrastructure focus
-- **Health Monitoring**: /health endpoint showing 3-layer architecture status
-- **Graceful Shutdown**: Proper resource cleanup and connection termination
-
-#### **🌐 hurricane-mcp-server.ts** - Protocol Layer & MCP Compliance Engine
-**Role**: Pure MCP Protocol Implementation & Tool Orchestration
-- **Complete MCP v2025-06-18 Compliance**: Full JSON-RPC 2.0 specification
-- **JSON Schema Tool Registration**: Corrected from Zod objects (architectural fix)
-- **All 5 Hurricane Tools**: `get_active_storms`, `get_storm_cone`, `get_storm_track`, `get_local_hurricane_alerts`, `search_historical_tracks`
-- **Clean Business Delegation**: Calls business layer, formats responses for MCP compliance
-- **Protocol-Level Validation**: Input validation with LLM-friendly error messages
-- **Zero Business Logic**: Pure protocol concerns only
-
-#### **🌀 hurricane-service.ts** - Business Layer & Domain Logic Engine
-**Role**: Pure Hurricane Domain Logic & API Integration
-- **Protocol-Free Implementation**: **ZERO** MCP types in business layer
-- **Plain Domain Objects**: All methods return clean business data structures
-- **Pure Business Focus**: Hurricane tracking logic without transport/protocol contamination
-- **Comprehensive Error Handling**: Domain-specific exceptions (`NotFoundError`, `ValidationError`)
-- **API Integration Ready**: Structured for real NOAA/NHC API integration
-- **Performance Monitoring**: Correlation ID tracking for all operations
-
 ### 📊 Data Flow Architecture
 
 ```mermaid
@@ -811,6 +763,54 @@ sequenceDiagram
 
     Note over C,API: Session-based, Rate-limited, Audited
 ```
+
+The Hurricane Tracker MCP Server implements **exemplary SOLID principles** with perfect separation of concerns across 3 distinct layers:
+
+### **Perfect 3-Layer Architecture (Gold Standard Implementation)**
+
+- `server.ts`: **ONLY** handles transport and infrastructure
+- `hurricane-mcp-server.ts`: **ONLY** handles MCP protocol compliance  
+- `hurricane-service.ts`: **ONLY** handles hurricane business logic
+  
+```
+Client (Cline) or AI Agent
+    ↓ (MCP Protocol Messages)
+server.ts (Transport Layer)
+    ↓ (Clean Delegation)
+hurricane-mcp-server.ts (Protocol Layer)
+    ↓ (Plain Business Requests)
+hurricane-service.ts (Business Layer)
+    ↓ (HTTP Requests)
+External APIs (NHC, NWS, IBTrACS)
+```
+
+### **Core Components - SOLID Implementation**
+
+#### **🔧 server.ts** - Transport Layer & Infrastructure Management
+**Role**: Pure Infrastructure & Transport Orchestration
+- **Fastify-Powered HTTP Transport**: High-performance with session management
+- **Dual Transport Support**: stdio (4ms startup) + Streamable HTTP (58ms startup)
+- **Perfect Delegation**: Zero protocol concerns - pure infrastructure focus
+- **Health Monitoring**: /health endpoint showing 3-layer architecture status
+- **Graceful Shutdown**: Proper resource cleanup and connection termination
+
+#### **🌐 hurricane-mcp-server.ts** - Protocol Layer & MCP Compliance Engine
+**Role**: Pure MCP Protocol Implementation & Tool Orchestration
+- **Complete MCP v2025-06-18 Compliance**: Full JSON-RPC 2.0 specification
+- **JSON Schema Tool Registration**: Corrected from Zod objects (architectural fix)
+- **All 5 Hurricane Tools**: `get_active_storms`, `get_storm_cone`, `get_storm_track`, `get_local_hurricane_alerts`, `search_historical_tracks`
+- **Clean Business Delegation**: Calls business layer, formats responses for MCP compliance
+- **Protocol-Level Validation**: Input validation with LLM-friendly error messages
+- **Zero Business Logic**: Pure protocol concerns only
+
+#### **🌀 hurricane-service.ts** - Business Layer & Domain Logic Engine
+**Role**: Pure Hurricane Domain Logic & API Integration
+- **Protocol-Free Implementation**: **ZERO** MCP types in business layer
+- **Plain Domain Objects**: All methods return clean business data structures
+- **Pure Business Focus**: Hurricane tracking logic without transport/protocol contamination
+- **Comprehensive Error Handling**: Domain-specific exceptions (`NotFoundError`, `ValidationError`)
+- **API Integration Ready**: Structured for real NOAA/NHC API integration
+- **Performance Monitoring**: Correlation ID tracking for all operations
 
 ## 🤝 Contributing
 
