@@ -85,7 +85,7 @@ Toggle to temporarily disable the MCP server:
       "command": "npm",
       "args": [
         "run",
-        "start:mcp"
+        "stdio"
       ],
       "cwd": "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp",
       "env": {
