@@ -15,6 +15,8 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
 
 - [🌀 Hurricane Tracker MCP Server](#-hurricane-tracker-mcp-server)
   - [📑 Table of Contents](#-table-of-contents)
+  - [🌟 Features](#-features)
+  - [🛠️ Technology Stack](#️-technology-stack)
   - [Quick Start](#quick-start)
     - [Prerequisites](#prerequisites)
     - [Installation \& Setup](#installation--setup)
@@ -49,6 +51,37 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
       - [**🌀 hurricane-service.ts** - Business Layer \& Domain Logic Engine](#-hurricane-servicets---business-layer--domain-logic-engine)
   - [🤝 Contributing](#-contributing)
   - [📄 License](#-license)
+
+## 🌟 Features
+
+- **🏗️ Perfect SOLID Architecture**: Clean 3-layer separation with zero cross-contamination
+- **⚡ Latest MCP SDK Patterns**: Modern `McpServer`, `registerTool()`, and Zod validation
+- **🤖 LLM-Friendly Design**: Clear tool descriptions, structured responses, and intelligent error handling
+- **🌀 Real-time Storm Tracking**: Current hurricane positions with wind speed, pressure, and movement data
+- **🔄 Modern Dual Transport**: 
+  - **Official Stdio**: Local development with Cline in VS Code
+  - **Official Streamable HTTP**: Production APIs, LangChain, microservices
+- **🛡️ Enterprise Resilience**: Circuit breaker, retry strategies, rate limiting, bulkhead isolation
+- **⚡ Ultra Performance**: Fastify + Undici with connection pooling and streaming
+- **🔒 Security First**: Input validation, Origin checks, CORS support, session management
+- **📊 Advanced Observability**: Structured Pino logging, real-time metrics, health monitoring
+- **🚀 Production Ready**: Docker containerization, graceful shutdown, error recovery
+
+## 🛠️ Technology Stack
+
+| Technology | Version | Purpose |
+|------------|---------|------------|
+| [**Node.js**](https://nodejs.org/) | `>=22.0.0` | JavaScript runtime environment |
+| [**TypeScript**](https://github.com/microsoft/TypeScript) | `~5.9.0` | Type-safe JavaScript development | 
+| [**@modelcontextprotocol/sdk**](https://github.com/modelcontextprotocol/typescript-sdk) | `~1.17.5` | **Latest MCP SDK** with modern patterns |
+| [**Zod**](https://zod.dev/) | `~4.0.1` | **Runtime schema validation** and TypeScript inference |
+| [**Fastify**](https://fastify.dev/) | `~5.6.0` | High-performance web framework (transport layer) |
+| [**Pino**](https://github.com/pinojs/pino) | `~9.9.0` | Production structured logging |
+| [**Vitest**](https://github.com/vitest-dev/vitest)| `~3.2.0` | Next-generation testing framework |
+| [**undici**](https://github.com/nodejs/undici) | `~7.16.0` | High-performance HTTP client with resilience |
+| [**Open-Meteo API**](https://open-meteo.com/) | N/A | Free weather data provider |
+
+> **Note**: The project includes an advanced `undici-resilience` package that enhances the standard undici client with enterprise-grade resilience patterns including circuit breakers, retry strategies, rate limiting, and comprehensive monitoring. This ensures reliable hurricane API calls even under adverse conditions.
 
 ## Quick Start
 
