@@ -10,7 +10,7 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
 - **npm** or **yarn** package manager
 - **Cline (Claude for VS Code)** or other **MCP-compatible AI assistant**
 
-### 1. Installation & Setup
+### Installation & Setup
 
 ```bash
 # Clone and navigate to the project
@@ -23,11 +23,9 @@ npm install
 # Build the project
 npm run build
 
-# Test the server (should start in ~2ms)
-npm run stdio
 ```
 
-### 2. Cline MCP Configuration
+#### Option 1. Cline AI Assistant
 
 Add the following configuration to your Cline MCP settings file (`cline_mcp_settings.json`):
 
@@ -61,11 +59,37 @@ Add the following configuration to your Cline MCP settings file (`cline_mcp_sett
 
 **Important**: Replace `/path/to/your/hurricane-tracker-mcp` with your actual project path.
 
-### 3. Restart Cline
-
 After adding the configuration, restart Cline to load the Hurricane Tracker MCP Server.
 
-### 4. Test All Hurricane Tools
+#### Option 2. Claud Desktop
+
+Add the following configuration to your Claude Desktop MCP settings file (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "hurricane-tracker-mcp": {
+      "command": "/path/to/your/.nvm/versions/node/v22.15.0/bin/node",
+      "args": [
+        "/path/to/your/hurricane-tracker-mcp/dist/server.js"
+      ],
+      "env": {
+        "MCP_TRANSPORT": "stdio",
+        "NODE_ENV": "production",
+        "PRETTY_LOGS": "false",
+        "LOG_LEVEL": "info"
+      },
+       "timeout": 30000
+    }
+  }
+}
+```
+
+**Important**: Replace `/path/to/your/hurricane-tracker-mcp` with your actual project path.
+
+After adding the configuration, restart Claude Desktop to load the Hurricane Tracker MCP Server.
+
+### Test All Hurricane Tools
 
 **Copy and paste these natural language prompts into Cline to test hurricane tracking capabilities:**
 

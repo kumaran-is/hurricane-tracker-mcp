@@ -8,7 +8,11 @@ import { config as dotenvConfig } from 'dotenv';
 import type { HurricaneTrackerConfig } from '../types.js';
 
 // Load environment variables from .env file
-dotenvConfig();
+// Suppress all dotenv output to avoid interfering with MCP protocol
+const originalLog = console.log;
+console.log = () => {};  // Temporarily disable console.log
+dotenvConfig({ debug: false });
+console.log = originalLog;  // Restore console.log
 
 // =============================================================================
 // ENVIRONMENT SCHEMA VALIDATION

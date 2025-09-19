@@ -34,22 +34,23 @@ This guide provides instructions for configuring Hurricane Tracker MCP with Clau
 **IMPORTANT**: Use the full path to Node.js v22+ to avoid version conflicts.
 
 ```json
-{
-  "mcpServers": {
-    "hurricane-tracker-mcp": {
-      "command": "/Users/kumaraniyyasamysrinivasan/.nvm/versions/node/v22.15.0/bin/node",
-      "args": [
-        "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp/dist/server.js"
-      ],
-      "env": {
-        "MCP_TRANSPORT": "stdio",
-        "NODE_ENV": "production",
-        "PRETTY_LOGS": "false",
-        "LOG_LEVEL": "info"
+ {
+    "mcpServers": {
+      "hurricane-tracker-mcp": {
+        "command": "/Users/kumaraniyyasamysrinivasan/.nvm/versions/node/v22.15.0/bin/node",
+        "args": [
+          "/Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp/dist/server.js"
+        ],
+        "env": {
+          "MCP_TRANSPORT": "stdio",
+          "NODE_ENV": "production",
+          "PRETTY_LOGS": "false",
+          "LOG_LEVEL": "info"
+        },
+        "timeout": 60000
       }
     }
   }
-}
 ```
 
 **Note**: Replace the Node.js path with your actual Node v22+ installation path. You can find it with: `which node`

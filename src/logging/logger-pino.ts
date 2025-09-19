@@ -32,8 +32,11 @@ const loggerConfig: pino.LoggerOptions = {
 
 /**
  * Main application logger instance
+ * In stdio mode, logs must go to stderr to avoid interfering with JSON-RPC on stdout
  */
-export const logger = pino(loggerConfig);
+export const logger = config.transport.type === 'stdio'
+  ? pino(loggerConfig, pino.destination({ dest: 2, sync: false }))  // 2 = stderr
+  : pino(loggerConfig);
 
 // =============================================================================
 // CORRELATION ID MANAGEMENT
