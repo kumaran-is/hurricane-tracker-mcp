@@ -7,11 +7,12 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { logger, performanceLogger, generateCorrelationId } from './logging/logger-pino.js';
 import { hurricaneService } from './hurricane-service.js';
-import { 
-  NotFoundError, 
-  UpstreamTimeoutError 
+import {
+  NotFoundError,
+  UpstreamTimeoutError
 } from './errors/base-errors.js';
 import type { ToolResponse } from './types.js';
+import { VERSION } from './utils/version.js';
 
 // =============================================================================
 // MCP TOOL SCHEMAS (Protocol Layer)
@@ -60,7 +61,7 @@ export class HurricaneMcpServer {
     this.startTime = Date.now();
     this.mcpServer = new McpServer({
       name: 'hurricane-tracker-mcp',
-      version: '1.0.1',
+      version: VERSION,
     });
 
     this.setupToolHandlers();
@@ -76,7 +77,7 @@ export class HurricaneMcpServer {
 
     logger.info({
       serverName: 'hurricane-tracker-mcp',
-      version: '1.0.1',
+      version: VERSION,
       toolCount: 5,
     }, 'MCP Protocol handlers configured');
   }
@@ -571,7 +572,7 @@ export class HurricaneMcpServer {
     const uptime = Date.now() - this.startTime;
     return {
       name: 'hurricane-tracker-mcp',
-      version: '1.0.1',
+      version: VERSION,
       uptime,
       toolCount: 5,
       protocolVersion: '2025-06-18',

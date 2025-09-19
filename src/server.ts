@@ -10,6 +10,7 @@ import { randomUUID } from 'node:crypto';
 import { config, getConfigSummary } from './config/config.js';
 import { logger, healthLogger } from './logging/logger-pino.js';
 import { hurricaneMcpServer } from './hurricane-mcp-server.js';
+import { VERSION } from './utils/version.js';
 
 // =============================================================================
 // TRANSPORT LAYER - Infrastructure and Transport Management  
@@ -33,13 +34,13 @@ async function main() {
   try {
     // Log startup with configuration summary
     logger.info(
-      { 
+      {
         config: getConfigSummary(),
-        version: '1.0.2',
+        version: VERSION,
         nodeVersion: process.version,
         transport: config.transport.type
-      }, 
-      'Starting Hurricane Tracker MCP Server v1.0.2 - SOLID Architecture'
+      },
+      `Starting Hurricane Tracker MCP Server v${VERSION} - SOLID Architecture`
     );
 
     // Create and start transport based on configuration
@@ -51,7 +52,7 @@ async function main() {
       event: 'ready',
       component: 'hurricane-tracker-mcp',
       duration: startupTime,
-      version: '1.0.2',
+      version: VERSION,
       config: {
         transport: config.transport.type,
         tools: 5,
@@ -66,7 +67,7 @@ async function main() {
         toolCount: 5,
         mcpVersion: '2025-06-18'
       }, 
-      'Hurricane Tracker MCP Server ready - SOLID 3-Layer Architecture v1.0.2'
+      `Hurricane Tracker MCP Server ready - SOLID 3-Layer Architecture v${VERSION}`
     );
 
     // Setup graceful shutdown handlers
@@ -224,7 +225,7 @@ async function createHttpTransport() {
     reply.send({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      version: '1.0.2',
+      version: VERSION,
       uptime: Date.now() - startTime,
       transport: 'http',
       sessions: Object.keys(transports).length,

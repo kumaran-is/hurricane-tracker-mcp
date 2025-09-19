@@ -5,6 +5,96 @@ All notable changes to the Hurricane Tracker MCP Server will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-09-19 ✅ **MCP CLIENT COMPATIBILITY & LOGGING FIXES**
+
+### 🔧 **Critical Fixes for Claude Desktop and Cline Integration**
+
+**BREAKING FIX**: Resolved critical logging issues that prevented proper MCP protocol communication with Claude Desktop and Cline.
+
+### 🚀 **MCP Protocol Fixes**
+
+#### ✅ **Fixed Stdio Transport Logging Interference**
+- **FIXED**: Logger output was going to stdout, interfering with JSON-RPC protocol
+- **BEFORE**: Log messages mixed with JSON-RPC messages on stdout causing parse errors
+- **AFTER**: All logs properly redirected to stderr in stdio mode
+- **RESULT**: Clean JSON-RPC communication on stdout, logs visible in stderr
+
+#### ✅ **Suppressed dotenv Console Output**
+- **FIXED**: dotenv library console output interfering with MCP protocol
+- **BEFORE**: `[dotenv@17.2.2] injecting env...` message on stdout
+- **AFTER**: Temporarily disabled console.log during dotenv initialization
+- **RESULT**: No unwanted output on stdout stream
+
+### 📚 **Documentation Updates**
+
+#### ✅ **CLAUDE_DESKTOP_SETUP.md - Complete Rewrite**
+- **ADDED**: Two configuration approaches (npm and direct node)
+- **FIXED**: Corrected npm script names to match actual package.json
+- **ADDED**: Node.js version conflict resolution instructions
+- **ADDED**: Timeout configuration examples
+- **RESULT**: Clear, working instructions for Claude Desktop setup
+
+#### ✅ **CLINE_SETUP.md - Enhanced Configuration**
+- **UPDATED**: Configuration examples with working paths
+- **ADDED**: Alternative npm script approach
+- **SYNCHRONIZED**: Script names with package.json
+- **RESULT**: Consistent documentation across both clients
+
+### 🔧 **Configuration Improvements**
+
+#### ✅ **Added `start:mcp` Script Alias**
+- **ADDED**: `start:mcp` as alias for `stdio` script in package.json
+- **REASON**: Support both naming conventions in documentation
+- **RESULT**: Better compatibility with various configuration examples
+
+#### ✅ **Node.js Version Management**
+- **DOCUMENTED**: How to handle multiple Node.js versions with nvm
+- **SOLUTION**: Use full path to Node v22+ binary
+- **EXAMPLE**: `/Users/username/.nvm/versions/node/v22.15.0/bin/node`
+- **RESULT**: Eliminates Node.js version conflicts
+
+### 🐛 **Bug Fixes**
+
+#### ✅ **Claude Desktop npm Working Directory Issue**
+- **PROBLEM**: Claude Desktop doesn't respect `cwd` parameter with npm commands
+- **SYMPTOM**: `ENOENT: no such file or directory, open '/package.json'`
+- **SOLUTION**: Use direct Node.js path instead of npm for Claude Desktop
+- **RESULT**: Reliable server startup in Claude Desktop
+
+#### ✅ **Logging to Stderr in Stdio Mode**
+- **IMPLEMENTATION**: Conditional logger destination based on transport type
+  ```typescript
+  export const logger = config.transport.type === 'stdio'
+    ? pino(loggerConfig, pino.destination({ dest: 2, sync: false }))
+    : pino(loggerConfig);
+  ```
+- **RESULT**: Proper separation of protocol messages and logs
+
+### 📊 **Compatibility Matrix**
+
+| Client | npm Approach | Direct Node | Working Directory | Notes |
+|--------|-------------|-------------|-------------------|-------|
+| Cline | ✅ Works | ✅ Works | ✅ Respected | Full compatibility |
+| Claude Desktop | ❌ Fails | ✅ Works | ❌ Not respected | Use direct node path |
+
+### 🎯 **Impact Summary**
+
+- **Claude Desktop**: Now works reliably with direct Node.js configuration
+- **Cline**: Continues to work with both npm and direct approaches
+- **Logging**: Clean separation prevents protocol interference
+- **Documentation**: Clear, tested configurations for both clients
+
+### 🔄 **Migration Guide**
+
+For users upgrading from 1.0.3:
+
+1. **Rebuild the project**: `npm run build`
+2. **Update Claude Desktop config**: Use direct Node.js path
+3. **Keep Cline config**: Either npm or direct approach works
+4. **Set timeout**: Add `"timeout": 60000` for slower API calls
+
+---
+
 ## [1.0.3] - 2025-09-14 ✅ **CRITICAL ARCHITECTURE REFACTORING COMPLETE**
 
 ### 🏆 **MAJOR ACHIEVEMENT: Perfect SOLID Architecture Implementation**

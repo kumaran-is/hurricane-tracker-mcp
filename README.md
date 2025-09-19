@@ -388,7 +388,7 @@ When testing with the prompt above, you should see:
    - No alerts for northern locations or when no storms are active
 5. **Historical Search**: Results filtered by geography and date range from real IBTrACS data
 
-## 🏗️ SOLID Architecture **REFACTORING COMPLETE**
+## 🏗️ Architecture
 
 The Hurricane Tracker MCP Server implements **exemplary SOLID principles** with perfect separation of concerns across 3 distinct layers:
 

@@ -5,6 +5,7 @@
 
 import { logger } from '../logging/logger-pino.js';
 import { EventEmitter } from 'events';
+import { VERSION } from '../utils/version.js';
 
 export interface AuditEvent {
   id: string;
@@ -171,7 +172,7 @@ export class AuditLogger extends EventEmitter {
       details: this.maskSensitiveData(details),
       context: {
         applicationName: 'hurricane-tracker-mcp',
-        version: process.env.npm_package_version || '1.0.3',
+        version: process.env.npm_package_version || VERSION,
         environment: process.env.NODE_ENV || 'development',
         instanceId: this.instanceId,
       },
