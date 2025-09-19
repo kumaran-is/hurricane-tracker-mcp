@@ -6,8 +6,9 @@
 import { z } from 'zod';
 import { logger, performanceLogger } from './logging/logger-pino.js';
 import { generateCorrelationId } from './logging/logger-pino.js';
-import { 
-  ValidationError 
+import {
+  ValidationError,
+  NotFoundError
 } from './errors/base-errors.js';
 import type {
   HurricaneBasicInfo,
@@ -22,7 +23,7 @@ import type {
 // =============================================================================
 
 export const getActiveStormsSchema = z.object({
-  basin: z.enum(['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI']).optional(),
+  basin: z.string().regex(/^[A-Za-z]{2}$/i).optional().transform(val => val?.toUpperCase()),
 });
 
 export const getStormConeSchema = z.object({
@@ -45,7 +46,7 @@ export const searchHistoricalTracksSchema = z.object({
   }),
   start: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format'),
   end: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format'),
-  basin: z.enum(['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI']).optional(),
+  basin: z.string().regex(/^[A-Za-z]{2}$/i).optional().transform(val => val?.toUpperCase()),
 });
 
 // =============================================================================
@@ -110,9 +111,9 @@ export class HurricaneService {
           }
         }
 
-        // Filter by basin if specified
-        const filteredData = validated.basin 
-          ? stormData.filter(storm => storm.basin === validated.basin)
+        // Filter by basin if specified (case-insensitive comparison)
+        const filteredData = validated.basin
+          ? stormData.filter(storm => storm.basin.toUpperCase() === validated.basin)
           : stormData;
           
         logger.info({ 
@@ -232,7 +233,7 @@ export class HurricaneService {
         error: 'Storm cone data not available from real sources'
       });
 
-      throw new Error(`Storm cone data not available for storm ${validated.stormId} from real sources`);
+      throw new NotFoundError('Storm cone', validated.stormId, correlationId);
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -405,7 +406,7 @@ export class HurricaneService {
         error: 'Storm track data not available from real sources'
       });
 
-      throw new Error(`Storm track data not available for storm ${validated.stormId} from real sources`);
+      throw new NotFoundError('Storm track', validated.stormId, correlationId);
 
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -522,9 +523,9 @@ export class HurricaneService {
         historicalResults = [];
       }
 
-      // Filter by basin if specified
-      const filteredResults = validated.basin 
-        ? historicalResults.filter(storm => storm.basin === validated.basin)
+      // Filter by basin if specified (case-insensitive comparison)
+      const filteredResults = validated.basin
+        ? historicalResults.filter(storm => storm.basin.toUpperCase() === validated.basin)
         : historicalResults;
 
       const duration = Date.now() - startTime;

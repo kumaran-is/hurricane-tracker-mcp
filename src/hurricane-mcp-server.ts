@@ -18,15 +18,18 @@ import type { ToolResponse } from './types.js';
 // =============================================================================
 
 export const getActiveStormsSchema = z.object({
-  basin: z.enum(['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI']).optional(),
+  basin: z.string().regex(/^[A-Za-z]{2}$/i, 'Basin code must be 2 letters').optional()
+    .transform(val => val?.toUpperCase()),
 });
 
 export const getStormConeSchema = z.object({
-  stormId: z.string().regex(/^[A-Z]{2}[0-9]{6}$/, 'Storm ID must be in format like AL052024'),
+  stormId: z.string().regex(/^[A-Za-z]{2}[0-9]{6}$/i, 'Storm ID must be in format like AL052024 or al052024')
+    .transform(val => val.toUpperCase()),
 });
 
 export const getStormTrackSchema = z.object({
-  stormId: z.string().regex(/^[A-Z]{2}[0-9]{6}$/, 'Storm ID must be in format like AL052024'),
+  stormId: z.string().regex(/^[A-Za-z]{2}[0-9]{6}$/i, 'Storm ID must be in format like AL052024 or al052024')
+    .transform(val => val.toUpperCase()),
 });
 
 export const getLocalHurricaneAlertsSchema = z.object({
@@ -41,7 +44,8 @@ export const searchHistoricalTracksSchema = z.object({
   }),
   start: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format'),
   end: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format'),
-  basin: z.enum(['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI']).optional(),
+  basin: z.string().regex(/^[A-Za-z]{2}$/i, 'Basin code must be 2 letters').optional()
+    .transform(val => val?.toUpperCase()),
 });
 
 // =============================================================================
@@ -88,9 +92,11 @@ export class HurricaneMcpServer {
         title: 'Get Active Storms',
         description: 'List all active tropical cyclones globally with key metadata and links',
         inputSchema: {
-          basin: z.enum(['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI'])
+          basin: z.string()
+            .regex(/^[A-Za-z]{2}$/i, 'Basin code must be 2 letters (e.g., AL, EP, WP)')
             .optional()
-            .describe('Filter by basin code: AL (Atlantic), EP (Eastern Pacific), CP (Central Pacific), WP (Western Pacific), SI (South Indian)')
+            .describe('Filter by basin code: AL (Atlantic), EP (Eastern Pacific), CP (Central Pacific), WP (Western Pacific), SI (South Indian). Case-insensitive.')
+            .transform(val => val?.toUpperCase())
         } as any,
       },
       async ({ basin }, _extra) => this.handleGetActiveStorms({ basin })
@@ -104,8 +110,9 @@ export class HurricaneMcpServer {
         description: 'Get cone of uncertainty and forecast points for a specific storm',
         inputSchema: {
           stormId: z.string()
-            .regex(/^[A-Z]{2}[0-9]{6}$/, 'Storm ID must be in format like AL052024')
-            .describe('Storm identifier (e.g., AL052024 for Atlantic storm 5 in 2024)')
+            .regex(/^[A-Za-z]{2}[0-9]{6}$/i, 'Storm ID must be in format like AL052024 or al052024')
+            .describe('Storm identifier (e.g., AL052024 or al052024 for Atlantic storm 5 in 2024). Case-insensitive.')
+            .transform(val => val.toUpperCase())
         } as any,
       },
       async ({ stormId }, _extra) => this.handleGetStormCone({ stormId })
@@ -119,8 +126,9 @@ export class HurricaneMcpServer {
         description: 'Get historical track (past positions) for a storm',
         inputSchema: {
           stormId: z.string()
-            .regex(/^[A-Z]{2}[0-9]{6}$/, 'Storm ID must be in format like AL052024')
-            .describe('Storm identifier')
+            .regex(/^[A-Za-z]{2}[0-9]{6}$/i, 'Storm ID must be in format like AL052024 or al052024')
+            .describe('Storm identifier. Case-insensitive.')
+            .transform(val => val.toUpperCase())
         } as any,
       },
       async ({ stormId }, _extra) => this.handleGetStormTrack({ stormId })
@@ -163,9 +171,11 @@ export class HurricaneMcpServer {
           end: z.string()
             .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format')
             .describe('End date for search (YYYY-MM-DD format)'),
-          basin: z.enum(['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI'])
+          basin: z.string()
+            .regex(/^[A-Za-z]{2}$/i, 'Basin code must be 2 letters')
             .optional()
-            .describe('Filter by basin code')
+            .describe('Filter by basin code. Case-insensitive.')
+            .transform(val => val?.toUpperCase())
         } as any,
       },
       async ({ aoi, start, end, basin }, _extra) => this.handleSearchHistoricalTracks({ aoi, start, end, basin })
@@ -209,7 +219,7 @@ export class HurricaneMcpServer {
         cached: false,
       });
 
-      return this.formatMcpResponse(result, correlationId);
+      return this.formatMcpResponse(result, correlationId, 'get_active_storms');
 
     } catch (error) {
       return this.handleToolError(error, 'get_active_storms', correlationId, startTime);
@@ -244,7 +254,7 @@ export class HurricaneMcpServer {
         cached: false,
       });
 
-      return this.formatMcpResponse(result, correlationId);
+      return this.formatMcpResponse(result, correlationId, 'get_storm_cone');
 
     } catch (error) {
       return this.handleToolError(error, 'get_storm_cone', correlationId, startTime);
@@ -279,7 +289,7 @@ export class HurricaneMcpServer {
         cached: false,
       });
 
-      return this.formatMcpResponse(result, correlationId);
+      return this.formatMcpResponse(result, correlationId, 'get_storm_track');
 
     } catch (error) {
       return this.handleToolError(error, 'get_storm_track', correlationId, startTime);
@@ -314,7 +324,7 @@ export class HurricaneMcpServer {
         cached: false,
       });
 
-      return this.formatMcpResponse(result, correlationId);
+      return this.formatMcpResponse(result, correlationId, 'get_local_hurricane_alerts');
 
     } catch (error) {
       return this.handleToolError(error, 'get_local_hurricane_alerts', correlationId, startTime);
@@ -350,7 +360,7 @@ export class HurricaneMcpServer {
         cached: false,
       });
 
-      return this.formatMcpResponse(result, correlationId);
+      return this.formatMcpResponse(result, correlationId, 'search_historical_tracks');
 
     } catch (error) {
       return this.handleToolError(error, 'search_historical_tracks', correlationId, startTime);
@@ -362,14 +372,58 @@ export class HurricaneMcpServer {
   // ==========================================================================
 
   /**
-   * Format response according to MCP protocol standards
+   * Format response according to MCP protocol standards with LLM-friendly messages
    */
-  private formatMcpResponse(data: any, correlationId: string): ToolResponse {
+  private formatMcpResponse(data: any, correlationId: string, toolName?: string): ToolResponse {
+    let responseData = data;
+
+    // Make empty arrays more LLM-friendly
+    if (Array.isArray(data) && data.length === 0) {
+      // Customize message based on tool
+      let message = '';
+      switch (toolName) {
+        case 'get_active_storms':
+          message = 'No active tropical cyclones found. The Atlantic and Pacific hurricane seasons typically run from June through November.';
+          break;
+        case 'get_local_hurricane_alerts':
+          message = 'No hurricane-related alerts are currently active for this location. Continue to monitor weather conditions.';
+          break;
+        case 'search_historical_tracks':
+          message = 'No historical hurricane tracks found for the specified area and time period. Try expanding the search area or date range.';
+          break;
+        default:
+          message = 'No data found for the specified query.';
+      }
+
+      responseData = {
+        success: true,
+        count: 0,
+        results: [],
+        message: message
+      };
+    }
+    // Make single results more descriptive
+    else if (Array.isArray(data) && data.length > 0) {
+      responseData = {
+        success: true,
+        count: data.length,
+        results: data,
+        message: `Found ${data.length} ${data.length === 1 ? 'result' : 'results'}`
+      };
+    }
+    // For non-array successful responses, ensure they have a success flag
+    else if (typeof data === 'object' && data !== null && !data.error) {
+      responseData = {
+        success: true,
+        ...data
+      };
+    }
+
     return {
       content: [
         {
           type: 'text',
-          text: typeof data === 'string' ? data : JSON.stringify(data, null, 2),
+          text: typeof responseData === 'string' ? responseData : JSON.stringify(responseData, null, 2),
         },
       ],
       _meta: {
