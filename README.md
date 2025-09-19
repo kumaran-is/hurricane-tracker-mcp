@@ -140,6 +140,8 @@ Add the following configuration to your Claude Desktop MCP settings file (`claud
 
 After adding the configuration, restart Claude Desktop to load the Hurricane Tracker MCP Server.
 
+![Claude Desktop](./docs/media/claudedesktop.gif)
+
 ### Test All Hurricane Tools
 
 > 🧪 **For comprehensive testing with MCP Inspector, see [MCP_INSPECTOR_TEST_GUIDE.md](docs/MCP_INSPECTOR_TEST_GUIDE.md)**
