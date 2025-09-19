@@ -28,7 +28,7 @@ All configurations provide access to these 5 hurricane tracking tools:
 1. Node.js installed (v22+ recommended)
 2. Project built:
    ```bash
-   cd /Users/kumaraniyyasamysrinivasan/mydrive/personal/hurricane-tracker-mcp
+    cd /YOURPATH/hurricane-tracker-mcp/hurricane-tracker-mcp
    npm install
    npm run build
    ```
@@ -120,9 +120,9 @@ Toggle to temporarily disable the MCP server:
 2. Container running:
 3. cd `/YOUR-PATH/hurricane-tracker-mcp`
    
-   ```bash
-   docker-compose up --build -d
-   ```
+  ```bash
+  docker-compose up --build -d
+  ```
 
 ### Configuration in cline_mcp_settings.json
 
@@ -153,6 +153,7 @@ Toggle to temporarily disable the MCP server:
     }
   }
 }
+
 ```
 4. Verify container is running
 ```bash
