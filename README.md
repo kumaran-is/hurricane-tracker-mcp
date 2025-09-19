@@ -2,6 +2,38 @@
 
 A production-grade LLM-friendly Model Context Protocol (MCP) server that provides real-time hurricane tracking, forecast cones, local alerts, and historical storm data through MCP tools for AI assistants like Cline.
 
+## 📑 Table of Contents
+
+- [Quick Start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [Installation & Setup](#installation--setup)
+    - [Option 1: Cline AI Assistant](#option-1-cline-ai-assistant)
+    - [Option 2: Claude Desktop](#option-2-claud-desktop)
+  - [Test All Hurricane Tools](#test-all-hurricane-tools)
+    - [Quick Test - All Capabilities](#quick-test---all-capabilities)
+    - [Real-World Use Cases](#real-world-use-cases)
+    - [Individual Test Scenarios](#individual-test-scenarios)
+    - [Expected Real Data Behavior](#expected-real-data-behavior)
+    - [Expected Results](#expected-results)
+- [🌀 Available Hurricane Tools](#-available-hurricane-tools)
+  - [Detailed Examples](#detailed-examples)
+- [Running on Docker Container](#running-on-docker-container)
+  - [Build and Run with Docker Compose](#1-build-and-run-with-docker-compose)
+  - [Verify the Service is Running](#2-verify-the-service-is-running)
+  - [Cline MCP Configuration for Docker](#3-cline-mcp-configuration-for-docker)
+  - [Stop the Service](#4-stop-the-service)
+- [🔧 Development Commands](#-development-commands)
+- [📊 Expected Test Results](#-expected-test-results)
+- [🏗️ Architecture](#️-architecture)
+  - [📊 Data Flow Architecture](#-data-flow-architecture)
+  - [🔄 Component Interaction Diagram](#-component-interaction-diagram)
+  - [📋 Sequence Diagram - STDIO Transport](#-sequence-diagram---stdio-transport)
+  - [📋 Sequence Diagram - Streamable HTTP Transport](#-sequence-diagram---streamable-http-transport)
+  - [Perfect 3-Layer Architecture](#perfect-3-layer-architecture-gold-standard-implementation)
+  - [Core Components - SOLID Implementation](#core-components---solid-implementation)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
 ## Quick Start
 
 ### Prerequisites

@@ -6,6 +6,21 @@ This guide provides instructions for configuring Hurricane Tracker MCP with Clin
 
 **Note**: Cline does not support Streamable HTTP via Docker
 
+## 📑 Table of Contents
+
+- [Available Tools](#available-tools)
+- [Option 1: Direct Stdio Transport (Simplest)](#option-1-direct-stdio-transport-simplest)
+  - [Overview](#overview)
+  - [Alternative: Using npm script](#alternative-using-npm-script)
+  - [Prerequisites](#prerequisites)
+  - [Configuration in cline_mcp_settings.json](#configuration-in-cline_mcp_settingsjson)
+  - [timeout](#timeout)
+  - [disabled](#disabled)
+- [Option 2: Docker Stdio Transport (Container-based)](#option-2-docker-stdio-transport-container-based)
+  - [Overview](#overview-1)
+  - [Prerequisites](#prerequisites-1)
+  - [Configuration in cline_mcp_settings.json](#configuration-in-cline_mcp_settingsjson-1)
+
 ## Available Tools
 
 All configurations provide access to these 5 hurricane tracking tools:

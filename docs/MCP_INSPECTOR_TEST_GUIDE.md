@@ -2,6 +2,36 @@
 
 This guide provides comprehensive test cases for all 5 Hurricane Tracker MCP tools using MCP Inspector.
 
+## 📑 Table of Contents
+
+- [Setup MCP Inspector](#setup-mcp-inspector)
+  - [Connection Configuration](#connection-configuration)
+  - [Prerequisites](#prerequisites)
+- [Tool Testing Guide](#tool-testing-guide)
+  - [1. get_active_storms](#1-get_active_storms)
+    - [Success Test Cases](#success-test-cases)
+    - [Failure Test Cases](#failure-test-cases)
+  - [2. get_storm_cone](#2-get_storm_cone)
+    - [Success Test Cases](#success-test-cases-1)
+    - [Failure Test Cases](#failure-test-cases-1)
+  - [3. get_storm_track](#3-get_storm_track)
+    - [Success Test Cases](#success-test-cases-2)
+    - [Failure Test Cases](#failure-test-cases-2)
+  - [4. get_local_hurricane_alerts](#4-get_local_hurricane_alerts)
+    - [Success Test Cases](#success-test-cases-3)
+    - [Failure Test Cases](#failure-test-cases-3)
+  - [5. search_historical_tracks](#5-search_historical_tracks)
+    - [Success Test Cases](#success-test-cases-4)
+    - [Failure Test Cases](#failure-test-cases-4)
+- [Testing Tips](#testing-tips)
+  - [Performance Considerations](#performance-considerations)
+  - [Basin Codes Reference](#basin-codes-reference)
+  - [Storm ID Format](#storm-id-format)
+  - [Coordinate Validation](#coordinate-validation)
+- [Troubleshooting](#troubleshooting)
+  - [Common Issues](#common-issues)
+- [Summary](#summary)
+
 ## Setup MCP Inspector
 
 ### Connection Configuration

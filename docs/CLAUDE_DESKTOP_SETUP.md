@@ -4,6 +4,29 @@ This guide provides instructions for configuring Hurricane Tracker MCP with Clau
 1. **Stdio Transport** (Direct Node.js execution - Simple setup)
 2. **Streamable HTTP Transport** (Docker container - Production ready)
 
+## 📑 Table of Contents
+
+- [Configuration File Location](#configuration-file-location)
+- [Option 1: Stdio Transport (Simplest Setup)](#option-1-stdio-transport-simplest-setup--direct-node-approach)
+  - [Overview](#overview)
+  - [Prerequisites](#prerequisites)
+  - [Configuration](#configuration-in-claude_desktop_configjson)
+- [Option 2: Streamable HTTP Transport (Docker-based)](#option-2-streamable-http-transport-docker-based)
+  - [Overview](#overview-1)
+  - [Prerequisites](#prerequisites-1)
+  - [Configuration](#configuration-in-claude_desktop_configjson-1)
+  - [Docker Container Management](#docker-container-management)
+- [Available Tools](#available-tools)
+- [Switching Between Transports](#switching-between-transports)
+  - [To Use Stdio Transport](#to-use-stdio-transport)
+  - [To Use HTTP Transport](#to-use-http-transport)
+- [Restart Claude Desktop](#restart-claude-desktop)
+- [Verifying Connection](#verifying-connection)
+- [Environment Configuration](#environment-configuration)
+  - [Key Environment Variables](#key-environment-variables)
+- [Testing the Connection](#testing-the-connection)
+  - [Basic Queries](#basic-queries)
+
 ## Configuration File Location
 
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
