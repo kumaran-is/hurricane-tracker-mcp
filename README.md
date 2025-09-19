@@ -140,13 +140,27 @@ Add the following configuration to your Claude Desktop MCP settings file (`claud
 
 After adding the configuration, restart Claude Desktop to load the Hurricane Tracker MCP Server.
 
+**Copy and paste below prompts into Cline or Claude Desktop to test hurricane tracking MCP capabilities:**
+
+ **Cruise Ship Safety Check:**
+ ```bash
+  I'm the safety officer for a cruise line. We have ships departing from Miami next week heading to Cozumel, Mexico.
+  Check:
+  1. Are there any active storms in the Atlantic or Caribbean?
+  2. What's the forecast cone for any storms near our route?
+  3. Check for alerts at our ports: Miami, Key West, and Cozumel
+  4. Show me any major storms that hit this route in the past 2 years
+
+  Should we consider rerouting or delaying departures?
+  ```
+
 ![Claude Desktop](./docs/media/claudedesktop.gif)
 
 ### Test All Hurricane Tools
 
 > 🧪 **For comprehensive testing with MCP Inspector, see [MCP_INSPECTOR_TEST_GUIDE.md](docs/MCP_INSPECTOR_TEST_GUIDE.md)**
 
-**Copy and paste these natural language prompts into Cline to test hurricane tracking capabilities:**
+**Copy and paste these natural language prompts into Cline or Claude Desktop to test hurricane tracking capabilities:**
 
 #### **Quick Test - All Capabilities:**
 
@@ -174,18 +188,6 @@ Format the response in a clear, organized way that I can easily understand for t
 ```
 
 #### **Real-World Use Cases:**
-
- **Cruise Ship Safety Check:**
- ```bash
-  I'm the safety officer for a cruise line. We have ships departing from Miami next week heading to Cozumel, Mexico.
-  Check:
-  1. Are there any active storms in the Atlantic or Caribbean?
-  2. What's the forecast cone for any storms near our route?
-  3. Check for alerts at our ports: Miami, Key West, and Cozumel
-  4. Show me any major storms that hit this route in the past 2 years
-
-  Should we consider rerouting or delaying departures?
-  ```
 
 **Emergency Preparedness Check:**
 ```bash
