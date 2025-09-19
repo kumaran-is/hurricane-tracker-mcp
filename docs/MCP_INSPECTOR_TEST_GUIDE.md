@@ -52,9 +52,20 @@ This guide provides comprehensive test cases for all 5 Hurricane Tracker MCP too
 
 3. Start the MCP inpsector:
    ```bash
-   npx @modelcontextprotocol/inspector 
+   npx @modelcontextprotocol/inspector
    ```
    It will start the MCP inspector and opens the http://localhost:6274/ on the browser
+
+### MCP Inspector Interface
+
+![MCP Inspector](../docs/media/mcpinspector.png)
+
+The MCP Inspector provides a web-based interface to:
+- Connect to MCP servers via HTTP or stdio transport
+- Browse available tools and their schemas
+- Execute tools with custom arguments
+- View real-time responses and debug information
+- Test error handling with invalid inputs
 
 ## Tool Testing Guide
 
