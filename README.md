@@ -54,18 +54,30 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
 
 ## 🌟 Features
 
+### Hurricane Tracking Capabilities
+- **🌀 Real-time Storm Tracking**: Live tropical cyclone positions, wind speeds, pressure data from NOAA/NHC
+- **📍 5 Specialized Hurricane Tools**:
+  - `get_active_storms` - Monitor all active tropical cyclones worldwide
+  - `get_storm_cone` - 5-day forecast cone of uncertainty for storm paths
+  - `get_storm_track` - Historical storm track data
+  - `get_local_hurricane_alerts` - Location-based hurricane warnings and watches
+  - `search_historical_tracks` - Query IBTrACS database for past hurricanes
+- **🌊 Multi-Basin Coverage**: Atlantic (AL), Eastern Pacific (EP), Western Pacific (WP), and more
+- **⚠️ Real-time Alerts**: Integration with NWS for hurricane warnings, watches, and advisories
+- **📊 Historical Data**: Access to IBTrACS historical hurricane database
+
+### Technical Excellence
 - **🏗️ Perfect SOLID Architecture**: Clean 3-layer separation with zero cross-contamination
 - **⚡ Latest MCP SDK Patterns**: Modern `McpServer`, `registerTool()`, and Zod validation
 - **🤖 LLM-Friendly Design**: Clear tool descriptions, structured responses, and intelligent error handling
-- **🌀 Real-time Storm Tracking**: Current hurricane positions with wind speed, pressure, and movement data
-- **🔄 Modern Dual Transport**: 
-  - **Official Stdio**: Local development with Cline in VS Code
-  - **Official Streamable HTTP**: Production APIs, LangChain, microservices
+- **🔄 Modern Dual Transport**:
+  - **Official Stdio**: Local development with Cline/Claude Desktop
+  - **Official Streamable HTTP**: Production APIs with session management
 - **🛡️ Enterprise Resilience**: Circuit breaker, retry strategies, rate limiting, bulkhead isolation
 - **⚡ Ultra Performance**: Fastify + Undici with connection pooling and streaming
-- **🔒 Security First**: Input validation, Origin checks, CORS support, session management
-- **📊 Advanced Observability**: Structured Pino logging, real-time metrics, health monitoring
-- **🚀 Production Ready**: Docker containerization, graceful shutdown, error recovery
+- **🔒 Security First**: Input validation, CORS support, session management, audit logging
+- **📊 Advanced Observability**: Structured Pino logging, correlation IDs, performance metrics
+- **🚀 Production Ready**: Docker containerization, graceful shutdown, health monitoring
 
 ## 🛠️ Technology Stack
 
@@ -74,12 +86,14 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
 | [**Node.js**](https://nodejs.org/) | `>=22.0.0` | JavaScript runtime environment |
 | [**TypeScript**](https://github.com/microsoft/TypeScript) | `~5.9.0` | Type-safe JavaScript development | 
 | [**@modelcontextprotocol/sdk**](https://github.com/modelcontextprotocol/typescript-sdk) | `~1.17.5` | **Latest MCP SDK** with modern patterns |
-| [**Zod**](https://zod.dev/) | `~4.0.1` | **Runtime schema validation** and TypeScript inference |
+| [**Zod**](https://zod.dev/) | `~3.23.8` | **Runtime schema validation** and TypeScript inference |
 | [**Fastify**](https://fastify.dev/) | `~5.6.0` | High-performance web framework (transport layer) |
 | [**Pino**](https://github.com/pinojs/pino) | `~9.9.0` | Production structured logging |
 | [**Vitest**](https://github.com/vitest-dev/vitest)| `~3.2.0` | Next-generation testing framework |
 | [**undici**](https://github.com/nodejs/undici) | `~7.16.0` | High-performance HTTP client with resilience |
-| [**Open-Meteo API**](https://open-meteo.com/) | N/A | Free weather data provider |
+| [**NOAA/NHC APIs**](https://www.nhc.noaa.gov/) | N/A | Real-time hurricane data from National Hurricane Center |
+| [**NWS API**](https://www.weather.gov/documentation/services-web-api) | N/A | Weather alerts and warnings |
+| [**IBTrACS**](https://www.ncei.noaa.gov/products/international-best-track-archive) | N/A | Historical hurricane track database |
 
 > **Note**: The project includes an advanced `undici-resilience` package that enhances the standard undici client with enterprise-grade resilience patterns including circuit breakers, retry strategies, rate limiting, and comprehensive monitoring. This ensures reliable hurricane API calls even under adverse conditions.
 
