@@ -151,8 +151,8 @@ async function createHttpTransport() {
             transports[sessionId] = transport;
             logger.debug({ sessionId }, 'New MCP session initialized');
           },
-          enableDnsRebindingProtection: true,
-          allowedHosts: ['127.0.0.1', 'localhost'],
+          enableDnsRebindingProtection: false,  // Disabled for Docker
+          allowedHosts: ['127.0.0.1', 'localhost', '0.0.0.0'],
         });
 
         // Clean up transport when closed
@@ -239,7 +239,8 @@ async function createHttpTransport() {
 
   // Start Fastify HTTP server
   const port = config.transport.httpPort || 8080;
-  await app.listen({ port, host: '127.0.0.1' });
+  const host = config.transport.httpHost || '0.0.0.0';
+  await app.listen({ port, host });
   
   logger.info({ port, transport: 'http' }, 'Hurricane MCP Server HTTP transport listening on Fastify');
 
