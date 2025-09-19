@@ -8,7 +8,11 @@ import { config as dotenvConfig } from 'dotenv';
 import type { HurricaneTrackerConfig } from '../types.js';
 
 // Load environment variables from .env file
-dotenvConfig();
+// Suppress all dotenv output to avoid interfering with MCP protocol
+const originalLog = console.log;
+console.log = () => {};  // Temporarily disable console.log
+dotenvConfig({ debug: false });
+console.log = originalLog;  // Restore console.log
 
 // =============================================================================
 // ENVIRONMENT SCHEMA VALIDATION
@@ -16,7 +20,7 @@ dotenvConfig();
 
 const envSchema = z.object({
   // Transport Configuration
-  MCP_TRANSPORT: z.enum(['stdio', 'http', 'sse']).default('stdio'),
+  MCP_TRANSPORT: z.enum(['stdio', 'http']).default('stdio'),
   HTTP_PORT: z.coerce.number().min(1).max(65535).default(8080),
   HTTP_HOST: z.string().default('localhost'),
 
@@ -41,9 +45,17 @@ const envSchema = z.object({
   REQUEST_TIMEOUT_MS: z.coerce.number().min(1000).max(300000).default(30000),
   CONNECTION_TIMEOUT_MS: z.coerce.number().min(1000).max(60000).default(10000),
 
-  // Security Settings
+  // Authentication & Security Settings
+  AUTH_ENABLED: z.coerce.boolean().default(false),
+  MCP_SERVER_API_KEYS: z.string().optional().transform(val => val?.split(',') || []),
+  SESSION_TIMEOUT: z.coerce.number().min(60000).default(3600000),
+  ALLOWED_ORIGINS: z.string().default('*'),
   RATE_LIMIT_PER_CLIENT: z.coerce.number().min(1).max(10000).default(100),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().min(1000).max(3600000).default(60000),
+  RATE_LIMIT_ENABLED: z.coerce.boolean().default(true),
+  RATE_LIMIT_BURST: z.coerce.number().min(1).max(1000).default(10),
+  RATE_LIMIT_BLOCK_DURATION: z.coerce.number().min(1000).default(300000),
+  RATE_LIMIT_WHITELIST: z.string().optional().transform(val => val?.split(',') || []),
   MAX_REQUEST_SIZE_BYTES: z.coerce.number().min(1024).max(10485760).default(1048576),
   ENABLE_AUDIT_LOGGING: z.coerce.boolean().default(true),
   ENABLE_INPUT_SANITIZATION: z.coerce.boolean().default(true),
@@ -76,7 +88,7 @@ const envSchema = z.object({
   // Development Settings
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DEBUG_MODE: z.coerce.boolean().default(false),
-  PRETTY_LOGS: z.coerce.boolean().default(true),
+  PRETTY_LOGS: z.coerce.boolean().default(false),
 
   // Feature Flags
   ENABLE_HISTORICAL_SEARCH: z.coerce.boolean().default(true),
@@ -99,10 +111,10 @@ function validateEnvironment() {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessages = error.errors.map(
-        (err) => `${err.path.join('.')}: ${err.message}`
+        (err) => `${err.path.join('.')}: ${err.message}`,
       );
       throw new Error(
-        `Invalid environment configuration:\n${errorMessages.join('\n')}`
+        `Invalid environment configuration:\n${errorMessages.join('\n')}`,
       );
     }
     throw error;
@@ -120,6 +132,11 @@ export const config: HurricaneTrackerConfig = {
     type: env.MCP_TRANSPORT,
     port: env.HTTP_PORT,
     host: env.HTTP_HOST,
+    httpPort: env.HTTP_PORT,
+    httpHost: env.HTTP_HOST,
+    httpCors: {
+      allowedOrigins: ['http://localhost:3000', 'http://localhost:8080'],
+    },
   },
   dataSources: {
     nws: {
@@ -149,8 +166,16 @@ export const config: HurricaneTrackerConfig = {
     connectionTimeoutMs: env.CONNECTION_TIMEOUT_MS,
   },
   security: {
+    authEnabled: env.AUTH_ENABLED,
+    apiKeys: env.MCP_SERVER_API_KEYS,
+    sessionTimeout: env.SESSION_TIMEOUT,
+    allowedOrigins: env.ALLOWED_ORIGINS,
     rateLimitPerClient: env.RATE_LIMIT_PER_CLIENT,
     rateLimitWindowMs: env.RATE_LIMIT_WINDOW_MS,
+    rateLimitEnabled: env.RATE_LIMIT_ENABLED,
+    rateLimitBurst: env.RATE_LIMIT_BURST,
+    rateLimitBlockDuration: env.RATE_LIMIT_BLOCK_DURATION,
+    rateLimitWhitelist: env.RATE_LIMIT_WHITELIST,
     maxRequestSizeBytes: env.MAX_REQUEST_SIZE_BYTES,
     enableAuditLogging: env.ENABLE_AUDIT_LOGGING,
     enableInputSanitization: env.ENABLE_INPUT_SANITIZATION,
@@ -235,7 +260,7 @@ export function validateConfiguration(): { valid: boolean; errors?: string[] } {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors = error.errors.map(
-        (err) => `${err.path.join('.')}: ${err.message}`
+        (err) => `${err.path.join('.')}: ${err.message}`,
       );
       return { valid: false, errors };
     }

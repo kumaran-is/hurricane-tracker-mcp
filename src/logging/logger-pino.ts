@@ -5,8 +5,8 @@
 
 import pino from 'pino';
 import { v4 as uuidv4 } from 'uuid';
-import { config, getEnvironmentConfig } from './config/config.js';
-import type { RequestContext } from './types.js';
+import { config, getEnvironmentConfig } from '../config/config.js';
+import type { RequestContext } from '../types.js';
 
 // =============================================================================
 // LOGGER CONFIGURATION
@@ -26,23 +26,17 @@ const loggerConfig: pino.LoggerOptions = {
     bindings: () => ({}),
   },
   timestamp: pino.stdTimeFunctions.isoTime,
-  // Pretty print in development
-  transport: envConfig.prettyLogs
-    ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname',
-        },
-      }
-    : undefined,
+  // Disable pino-pretty transport in production to avoid dependency issues
+  // pino-pretty is a dev dependency and not available in production container
 };
 
 /**
  * Main application logger instance
+ * In stdio mode, logs must go to stderr to avoid interfering with JSON-RPC on stdout
  */
-export const logger = pino(loggerConfig);
+export const logger = config.transport.type === 'stdio'
+  ? pino(loggerConfig, pino.destination({ dest: 2, sync: false }))  // 2 = stderr
+  : pino(loggerConfig);
 
 // =============================================================================
 // CORRELATION ID MANAGEMENT
@@ -95,7 +89,7 @@ export const mcpLogger = {
         },
         capabilities: data.capabilities,
       },
-      'MCP client initialized'
+      'MCP client initialized',
     );
   },
 
@@ -149,7 +143,7 @@ export const mcpLogger = {
     if (data.error) {
       logger.error(
         { ...logData, error: data.error.message, stack: data.error.stack },
-        `Transport ${data.event}: ${data.transport}`
+        `Transport ${data.event}: ${data.transport}`,
       );
     } else {
       logger.info(logData, `Transport ${data.event}: ${data.transport}`);
@@ -174,7 +168,7 @@ export const mcpLogger = {
         message: data.message,
         errorCode: data.code,
       },
-      'MCP protocol error'
+      'MCP protocol error',
     );
   },
 };
@@ -238,7 +232,55 @@ export const performanceLogger = {
         ...(data.size && { sizeBytes: data.size }),
         ...(data.ttl && { ttlSeconds: data.ttl }),
       },
-      `Cache ${data.operation}: ${data.key}`
+      `Cache ${data.operation}: ${data.key}`,
+    );
+  },
+
+  /**
+   * Log HTTP request details
+   */
+  httpRequest(data: {
+    correlationId: string;
+    method: string;
+    url: string;
+    userAgent: string;
+    ip: string;
+  }) {
+    logger.debug(
+      {
+        event: 'http_request',
+        correlationId: data.correlationId,
+        method: data.method,
+        url: data.url,
+        userAgent: data.userAgent,
+        ip: data.ip,
+      },
+      `HTTP ${data.method} ${data.url}`,
+    );
+  },
+
+  /**
+   * Log HTTP response details
+   */
+  httpResponse(data: {
+    correlationId: string;
+    method: string;
+    url: string;
+    statusCode: number;
+    responseTime: number;
+  }) {
+    const logLevel = data.statusCode >= 400 ? 'warn' : 'debug';
+
+    logger[logLevel](
+      {
+        event: 'http_response',
+        correlationId: data.correlationId,
+        method: data.method,
+        url: data.url,
+        statusCode: data.statusCode,
+        responseTimeMs: data.responseTime,
+      },
+      `HTTP ${data.method} ${data.url} ${data.statusCode}`,
     );
   },
 
@@ -266,7 +308,7 @@ export const performanceLogger = {
         event: 'system_metrics',
         metrics: data,
       },
-      'System performance metrics'
+      'System performance metrics',
     );
   },
 };
@@ -286,7 +328,7 @@ export const auditLogger = {
     severity: 'low' | 'medium' | 'high' | 'critical';
   }) {
     const logLevel = data.severity === 'critical' || data.severity === 'high' ? 'error' : 'warn';
-    
+
     logger[logLevel](
       {
         event: 'security_event',
@@ -296,7 +338,7 @@ export const auditLogger = {
         severity: data.severity,
         details: data.details,
       },
-      `Security event: ${data.event}`
+      `Security event: ${data.event}`,
     );
   },
 
@@ -321,7 +363,7 @@ export const auditLogger = {
         success: data.success,
         ...(data.metadata && { metadata: data.metadata }),
       },
-      `User action: ${data.action} on ${data.resource}`
+      `User action: ${data.action} on ${data.resource}`,
     );
   },
 
@@ -344,7 +386,7 @@ export const auditLogger = {
         recordCount: data.recordCount,
         source: data.source,
       },
-      `Data access: ${data.operation} ${data.dataType}`
+      `Data access: ${data.operation} ${data.dataType}`,
     );
   },
 };
@@ -364,7 +406,7 @@ export const healthLogger = {
     details?: any;
   }) {
     const logLevel = data.status === 'healthy' ? 'debug' : 'warn';
-    
+
     logger[logLevel](
       {
         event: 'health_check',
@@ -374,7 +416,7 @@ export const healthLogger = {
         ...(data.error && { error: data.error }),
         ...(data.details && { details: data.details }),
       },
-      `Health check: ${data.component} is ${data.status}`
+      `Health check: ${data.component} is ${data.status}`,
     );
   },
 
@@ -397,7 +439,7 @@ export const healthLogger = {
         ...(data.version && { version: data.version }),
         ...(data.config && { config: data.config }),
       },
-      `${data.component} ${data.event}`
+      `${data.component} ${data.event}`,
     );
   },
 };
@@ -415,7 +457,7 @@ export function logError(
     correlationId?: string;
     operation?: string;
     metadata?: any;
-  }
+  },
 ) {
   logger.error(
     {
@@ -425,7 +467,7 @@ export function logError(
       operation: context.operation,
       ...(context.metadata && { metadata: context.metadata }),
     },
-    `Error in ${context.operation || 'unknown operation'}`
+    `Error in ${context.operation || 'unknown operation'}`,
   );
 }
 
@@ -437,14 +479,14 @@ export function logWarning(
   context: {
     correlationId?: string;
     metadata?: any;
-  }
+  },
 ) {
   logger.warn(
     {
       correlationId: context.correlationId,
       ...(context.metadata && { metadata: context.metadata }),
     },
-    message
+    message,
   );
 }
 

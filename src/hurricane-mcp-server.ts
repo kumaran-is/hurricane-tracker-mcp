@@ -1,0 +1,605 @@
+/**
+ * Hurricane Tracker MCP Server - Protocol Layer & Tool Registration
+ * SOLID Architecture: Single Responsibility - MCP Protocol Implementation & Tool Orchestration
+ */
+
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
+import { logger, performanceLogger, generateCorrelationId } from './logging/logger-pino.js';
+import { hurricaneService } from './hurricane-service.js';
+import {
+  NotFoundError,
+  UpstreamTimeoutError
+} from './errors/base-errors.js';
+import type { ToolResponse } from './types.js';
+import { VERSION } from './utils/version.js';
+
+// =============================================================================
+// MCP TOOL SCHEMAS (Protocol Layer)
+// =============================================================================
+
+export const getActiveStormsSchema = z.object({
+  basin: z.string().regex(/^[A-Za-z]{2}$/i, 'Basin code must be 2 letters').optional()
+    .transform(val => val?.toUpperCase()),
+});
+
+export const getStormConeSchema = z.object({
+  stormId: z.string().regex(/^[A-Za-z]{2}[0-9]{6}$/i, 'Storm ID must be in format like AL052024 or al052024')
+    .transform(val => val.toUpperCase()),
+});
+
+export const getStormTrackSchema = z.object({
+  stormId: z.string().regex(/^[A-Za-z]{2}[0-9]{6}$/i, 'Storm ID must be in format like AL052024 or al052024')
+    .transform(val => val.toUpperCase()),
+});
+
+export const getLocalHurricaneAlertsSchema = z.object({
+  lat: z.number().min(-90).max(90),
+  lon: z.number().min(-180).max(180),
+});
+
+export const searchHistoricalTracksSchema = z.object({
+  aoi: z.object({
+    type: z.literal('Polygon'),
+    coordinates: z.array(z.array(z.array(z.number()))),
+  }),
+  start: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format'),
+  end: z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format'),
+  basin: z.string().regex(/^[A-Za-z]{2}$/i, 'Basin code must be 2 letters').optional()
+    .transform(val => val?.toUpperCase()),
+});
+
+// =============================================================================
+// MCP PROTOCOL HANDLER CLASS
+// =============================================================================
+
+export class HurricaneMcpServer {
+  private mcpServer: McpServer;
+  private startTime: number;
+
+  constructor() {
+    this.startTime = Date.now();
+    this.mcpServer = new McpServer({
+      name: 'hurricane-tracker-mcp',
+      version: VERSION,
+    });
+
+    this.setupToolHandlers();
+    this.setupProtocolHandlers();
+  }
+
+  /**
+   * Setup MCP protocol event handlers for lifecycle management
+   */
+  private setupProtocolHandlers(): void {
+    // MCP server handles errors through transport layer
+    // No direct error handler needed here
+
+    logger.info({
+      serverName: 'hurricane-tracker-mcp',
+      version: VERSION,
+      toolCount: 5,
+    }, 'MCP Protocol handlers configured');
+  }
+
+  /**
+   * Setup tool handlers with proper MCP registration and validation
+   */
+  private setupToolHandlers(): void {
+    // Tool 1: Get Active Storms
+    this.mcpServer.registerTool(
+      'get_active_storms',
+      {
+        title: 'Get Active Storms',
+        description: 'List all active tropical cyclones globally with key metadata and links',
+        inputSchema: {
+          basin: z.string()
+            .regex(/^[A-Za-z]{2}$/i, 'Basin code must be 2 letters (e.g., AL, EP, WP)')
+            .optional()
+            .describe('Filter by basin code: AL (Atlantic), EP (Eastern Pacific), CP (Central Pacific), WP (Western Pacific), SI (South Indian). Case-insensitive.')
+            .transform(val => val?.toUpperCase())
+        } as any,
+      },
+      async ({ basin }, _extra) => this.handleGetActiveStorms({ basin })
+    );
+
+    // Tool 2: Get Storm Cone
+    this.mcpServer.registerTool(
+      'get_storm_cone',
+      {
+        title: 'Get Storm Cone',
+        description: 'Get cone of uncertainty and forecast points for a specific storm',
+        inputSchema: {
+          stormId: z.string()
+            .regex(/^[A-Za-z]{2}[0-9]{6}$/i, 'Storm ID must be in format like AL052024 or al052024')
+            .describe('Storm identifier (e.g., AL052024 or al052024 for Atlantic storm 5 in 2024). Case-insensitive.')
+            .transform(val => val.toUpperCase())
+        } as any,
+      },
+      async ({ stormId }, _extra) => this.handleGetStormCone({ stormId })
+    );
+
+    // Tool 3: Get Storm Track
+    this.mcpServer.registerTool(
+      'get_storm_track',
+      {
+        title: 'Get Storm Track',
+        description: 'Get historical track (past positions) for a storm',
+        inputSchema: {
+          stormId: z.string()
+            .regex(/^[A-Za-z]{2}[0-9]{6}$/i, 'Storm ID must be in format like AL052024 or al052024')
+            .describe('Storm identifier. Case-insensitive.')
+            .transform(val => val.toUpperCase())
+        } as any,
+      },
+      async ({ stormId }, _extra) => this.handleGetStormTrack({ stormId })
+    );
+
+    // Tool 4: Get Local Hurricane Alerts
+    this.mcpServer.registerTool(
+      'get_local_hurricane_alerts',
+      {
+        title: 'Get Local Hurricane Alerts',
+        description: 'Get active hurricane-related alerts for a specific location',
+        inputSchema: {
+          lat: z.number()
+            .min(-90)
+            .max(90)
+            .describe('Latitude in decimal degrees'),
+          lon: z.number()
+            .min(-180)
+            .max(180)
+            .describe('Longitude in decimal degrees')
+        } as any,
+      },
+      async ({ lat, lon }, _extra) => this.handleGetLocalHurricaneAlerts({ lat, lon })
+    );
+
+    // Tool 5: Search Historical Tracks
+    this.mcpServer.registerTool(
+      'search_historical_tracks',
+      {
+        title: 'Search Historical Tracks',
+        description: 'Query historical hurricane tracks by area and date range',
+        inputSchema: {
+          aoi: z.object({
+            type: z.literal('Polygon'),
+            coordinates: z.array(z.array(z.array(z.number())))
+          }).describe('Area of interest as GeoJSON Polygon'),
+          start: z.string()
+            .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format')
+            .describe('Start date for search (YYYY-MM-DD format)'),
+          end: z.string()
+            .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format')
+            .describe('End date for search (YYYY-MM-DD format)'),
+          basin: z.string()
+            .regex(/^[A-Za-z]{2}$/i, 'Basin code must be 2 letters')
+            .optional()
+            .describe('Filter by basin code. Case-insensitive.')
+            .transform(val => val?.toUpperCase())
+        } as any,
+      },
+      async ({ aoi, start, end, basin }, _extra) => this.handleSearchHistoricalTracks({ aoi, start, end, basin })
+    );
+
+    logger.info({ toolCount: 5 }, 'Hurricane tools registered with MCP server');
+  }
+
+  // ==========================================================================
+  // TOOL HANDLERS (Protocol Layer - Orchestration & Validation)
+  // ==========================================================================
+
+  /**
+   * Handle get_active_storms tool call with proper protocol compliance
+   */
+  private async handleGetActiveStorms(args: any): Promise<any> {
+    const correlationId = generateCorrelationId();
+    const startTime = Date.now();
+
+    try {
+      // Protocol-level input validation
+      const validated = getActiveStormsSchema.parse(args);
+      
+      logger.info({ 
+        correlationId, 
+        tool: 'get_active_storms', 
+        basin: validated.basin 
+      }, 'MCP tool call: get_active_storms');
+
+      // Delegate to business layer
+      const result = await hurricaneService.getActiveStorms(validated);
+
+      // Protocol-level response formatting and logging
+      const duration = Date.now() - startTime;
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'hurricane-service',
+        endpoint: 'get_active_storms',
+        method: 'TOOL_CALL',
+        duration,
+        cached: false,
+      });
+
+      return this.formatMcpResponse(result, correlationId, 'get_active_storms');
+
+    } catch (error) {
+      return this.handleToolError(error, 'get_active_storms', correlationId, startTime);
+    }
+  }
+
+  /**
+   * Handle get_storm_cone tool call with proper protocol compliance
+   */
+  private async handleGetStormCone(args: any): Promise<any> {
+    const correlationId = generateCorrelationId();
+    const startTime = Date.now();
+
+    try {
+      const validated = getStormConeSchema.parse(args);
+      
+      logger.info({ 
+        correlationId, 
+        tool: 'get_storm_cone', 
+        stormId: validated.stormId 
+      }, 'MCP tool call: get_storm_cone');
+
+      const result = await hurricaneService.getStormCone(validated);
+
+      const duration = Date.now() - startTime;
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'hurricane-service',
+        endpoint: 'get_storm_cone',
+        method: 'TOOL_CALL',
+        duration,
+        cached: false,
+      });
+
+      return this.formatMcpResponse(result, correlationId, 'get_storm_cone');
+
+    } catch (error) {
+      return this.handleToolError(error, 'get_storm_cone', correlationId, startTime);
+    }
+  }
+
+  /**
+   * Handle get_storm_track tool call with proper protocol compliance
+   */
+  private async handleGetStormTrack(args: any): Promise<any> {
+    const correlationId = generateCorrelationId();
+    const startTime = Date.now();
+
+    try {
+      const validated = getStormTrackSchema.parse(args);
+      
+      logger.info({ 
+        correlationId, 
+        tool: 'get_storm_track', 
+        stormId: validated.stormId 
+      }, 'MCP tool call: get_storm_track');
+
+      const result = await hurricaneService.getStormTrack(validated);
+
+      const duration = Date.now() - startTime;
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'hurricane-service',
+        endpoint: 'get_storm_track',
+        method: 'TOOL_CALL',
+        duration,
+        cached: false,
+      });
+
+      return this.formatMcpResponse(result, correlationId, 'get_storm_track');
+
+    } catch (error) {
+      return this.handleToolError(error, 'get_storm_track', correlationId, startTime);
+    }
+  }
+
+  /**
+   * Handle get_local_hurricane_alerts tool call with proper protocol compliance
+   */
+  private async handleGetLocalHurricaneAlerts(args: any): Promise<any> {
+    const correlationId = generateCorrelationId();
+    const startTime = Date.now();
+
+    try {
+      const validated = getLocalHurricaneAlertsSchema.parse(args);
+      
+      logger.info({ 
+        correlationId, 
+        tool: 'get_local_hurricane_alerts', 
+        location: { lat: validated.lat, lon: validated.lon }
+      }, 'MCP tool call: get_local_hurricane_alerts');
+
+      const result = await hurricaneService.getLocalHurricaneAlerts(validated);
+
+      const duration = Date.now() - startTime;
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'hurricane-service',
+        endpoint: 'get_local_hurricane_alerts',
+        method: 'TOOL_CALL',
+        duration,
+        cached: false,
+      });
+
+      return this.formatMcpResponse(result, correlationId, 'get_local_hurricane_alerts');
+
+    } catch (error) {
+      return this.handleToolError(error, 'get_local_hurricane_alerts', correlationId, startTime);
+    }
+  }
+
+  /**
+   * Handle search_historical_tracks tool call with proper protocol compliance
+   */
+  private async handleSearchHistoricalTracks(args: any): Promise<any> {
+    const correlationId = generateCorrelationId();
+    const startTime = Date.now();
+
+    try {
+      const validated = searchHistoricalTracksSchema.parse(args);
+      
+      logger.info({ 
+        correlationId, 
+        tool: 'search_historical_tracks', 
+        dateRange: `${validated.start} to ${validated.end}`,
+        basin: validated.basin
+      }, 'MCP tool call: search_historical_tracks');
+
+      const result = await hurricaneService.searchHistoricalTracks(validated);
+
+      const duration = Date.now() - startTime;
+      performanceLogger.apiCall({
+        correlationId,
+        api: 'hurricane-service',
+        endpoint: 'search_historical_tracks',
+        method: 'TOOL_CALL',
+        duration,
+        cached: false,
+      });
+
+      return this.formatMcpResponse(result, correlationId, 'search_historical_tracks');
+
+    } catch (error) {
+      return this.handleToolError(error, 'search_historical_tracks', correlationId, startTime);
+    }
+  }
+
+  // ==========================================================================
+  // MCP PROTOCOL UTILITIES
+  // ==========================================================================
+
+  /**
+   * Format response according to MCP protocol standards with LLM-friendly messages
+   */
+  private formatMcpResponse(data: any, correlationId: string, toolName?: string): ToolResponse {
+    let responseData = data;
+
+    // Make empty arrays more LLM-friendly
+    if (Array.isArray(data) && data.length === 0) {
+      // Customize message based on tool
+      let message = '';
+      switch (toolName) {
+        case 'get_active_storms':
+          message = 'No active tropical cyclones found. The Atlantic and Pacific hurricane seasons typically run from June through November.';
+          break;
+        case 'get_local_hurricane_alerts':
+          message = 'No hurricane-related alerts are currently active for this location. Continue to monitor weather conditions.';
+          break;
+        case 'search_historical_tracks':
+          message = 'No historical hurricane tracks found for the specified area and time period. Try expanding the search area or date range.';
+          break;
+        default:
+          message = 'No data found for the specified query.';
+      }
+
+      responseData = {
+        success: true,
+        count: 0,
+        results: [],
+        message: message
+      };
+    }
+    // Make single results more descriptive
+    else if (Array.isArray(data) && data.length > 0) {
+      responseData = {
+        success: true,
+        count: data.length,
+        results: data,
+        message: `Found ${data.length} ${data.length === 1 ? 'result' : 'results'}`
+      };
+    }
+    // For non-array successful responses, ensure they have a success flag
+    else if (typeof data === 'object' && data !== null && !data.error) {
+      responseData = {
+        success: true,
+        ...data
+      };
+    }
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: typeof responseData === 'string' ? responseData : JSON.stringify(responseData, null, 2),
+        },
+      ],
+      _meta: {
+        timestamp: new Date().toISOString(),
+        correlationId,
+        protocolVersion: '2025-06-18',
+      },
+    };
+  }
+
+  /**
+   * Handle tool errors with proper MCP error formatting
+   */
+  private handleToolError(
+    error: any, 
+    toolName: string, 
+    correlationId: string, 
+    startTime: number
+  ): ToolResponse {
+    const duration = Date.now() - startTime;
+
+    // Log error with correlation context
+    logger.error({ 
+      error: error.message, 
+      correlationId, 
+      tool: toolName,
+      duration 
+    }, `MCP tool error: ${toolName}`);
+
+    // Track error metrics
+    performanceLogger.apiCall({
+      correlationId,
+      api: 'hurricane-service',
+      endpoint: toolName,
+      method: 'TOOL_CALL',
+      duration,
+      cached: false,
+      error: error.message,
+    });
+
+    // Convert to MCP-compliant error response
+    let mcpError: ToolResponse;
+
+    if (error instanceof z.ZodError) {
+      mcpError = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: 'Invalid input parameters',
+                details: error.errors,
+                hint: 'Please check the input parameters and ensure they meet the schema requirements',
+              },
+            }, null, 2),
+          },
+        ],
+        _meta: {
+          timestamp: new Date().toISOString(),
+          correlationId,
+          error: true,
+        },
+      };
+    } else if (error instanceof NotFoundError) {
+      mcpError = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: {
+                code: 'NOT_FOUND',
+                message: error.message,
+                hint: 'Check the identifier format or use get_active_storms to find valid storm IDs',
+              },
+            }, null, 2),
+          },
+        ],
+        _meta: {
+          timestamp: new Date().toISOString(),
+          correlationId,
+          error: true,
+        },
+      };
+    } else if (error instanceof UpstreamTimeoutError) {
+      mcpError = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: {
+                code: 'UPSTREAM_TIMEOUT',
+                message: 'Service timeout occurred',
+                hint: 'Try again in a few seconds. The external hurricane data service may be temporarily unavailable',
+              },
+            }, null, 2),
+          },
+        ],
+        _meta: {
+          timestamp: new Date().toISOString(),
+          correlationId,
+          error: true,
+        },
+      };
+    } else {
+      mcpError = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: {
+                code: 'INTERNAL_ERROR',
+                message: 'An unexpected error occurred',
+                hint: 'Please try again. If the problem persists, check the server logs',
+              },
+            }, null, 2),
+          },
+        ],
+        _meta: {
+          timestamp: new Date().toISOString(),
+          correlationId,
+          error: true,
+        },
+      };
+    }
+
+    return mcpError;
+  }
+
+  // ==========================================================================
+  // SERVER LIFECYCLE MANAGEMENT
+  // ==========================================================================
+
+  /**
+   * Get the configured MCP server instance for transport connection
+   */
+  getMcpServer(): McpServer {
+    return this.mcpServer;
+  }
+
+  /**
+   * Get server statistics for monitoring
+   */
+  getServerStats() {
+    const uptime = Date.now() - this.startTime;
+    return {
+      name: 'hurricane-tracker-mcp',
+      version: VERSION,
+      uptime,
+      toolCount: 5,
+      protocolVersion: '2025-06-18',
+      capabilities: {
+        tools: true,
+        logging: true,
+        completion: false,
+        resources: false,
+      },
+    };
+  }
+
+  /**
+   * Shutdown the MCP server gracefully
+   */
+  async shutdown(): Promise<void> {
+    logger.info('Shutting down Hurricane MCP server');
+    
+    try {
+      // The MCP server will handle its own cleanup through transport disconnection
+      logger.info('Hurricane MCP server shutdown complete');
+    } catch (error) {
+      logger.error({ error }, 'Error during MCP server shutdown');
+      throw error;
+    }
+  }
+}
+
+// Export singleton instance for use by transport layer
+export const hurricaneMcpServer = new HurricaneMcpServer();

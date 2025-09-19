@@ -105,13 +105,13 @@ export class ValidationError extends MCPError {
       message: `Validation failed: ${message}`,
       statusCode: 400,
       userMessage: `Invalid input: ${message}`,
-      recoveryHint: field 
+      recoveryHint: field
         ? `Please check the '${field}' parameter and ensure it meets the requirements`
         : 'Please verify all input parameters meet the expected format and constraints',
-      details: { 
-        field, 
+      details: {
+        field,
         providedValue: value,
-        validationError: message 
+        validationError: message,
       },
       correlationId,
     });
@@ -124,16 +124,16 @@ export class ValidationError extends MCPError {
 export class SchemaValidationError extends MCPError {
   constructor(errors: Array<{ field: string; message: string; value?: any }>, correlationId?: string) {
     const fieldErrors = errors.map(e => `${e.field}: ${e.message}`).join(', ');
-    
+
     super({
       code: 'VALIDATION_ERROR',
       message: `Schema validation failed: ${fieldErrors}`,
       statusCode: 400,
-      userMessage: `Input validation failed for multiple fields`,
+      userMessage: 'Input validation failed for multiple fields',
       recoveryHint: 'Please review the field-specific error details and correct the input format',
-      details: { 
+      details: {
         fieldErrors: errors,
-        errorCount: errors.length 
+        errorCount: errors.length,
       },
       correlationId,
     });
@@ -155,10 +155,10 @@ export class ContextLimitError extends MCPError {
       statusCode: 413,
       userMessage: 'Response too large for context window',
       recoveryHint: 'Try using pagination, filtering, or the summary option to reduce response size',
-      details: { 
-        currentSize, 
-        maxSize, 
-        excessTokens: currentSize - maxSize 
+      details: {
+        currentSize,
+        maxSize,
+        excessTokens: currentSize - maxSize,
       },
       correlationId,
     });
@@ -197,11 +197,11 @@ export class RateLimitError extends MCPError {
       statusCode: 429,
       userMessage: 'Too many requests',
       recoveryHint: `Please wait ${Math.ceil(retryAfter / 1000)} seconds before retrying`,
-      details: { 
-        limit, 
-        windowMs: window, 
+      details: {
+        limit,
+        windowMs: window,
         retryAfterMs: retryAfter,
-        retryAfterSeconds: Math.ceil(retryAfter / 1000)
+        retryAfterSeconds: Math.ceil(retryAfter / 1000),
       },
       correlationId,
     });
@@ -223,10 +223,10 @@ export class UpstreamTimeoutError extends MCPError {
       statusCode: 504,
       userMessage: `${service} service is currently slow to respond`,
       recoveryHint: 'Try again in a few seconds. The service may be experiencing high load',
-      details: { 
-        service, 
+      details: {
+        service,
         timeoutMs,
-        timeoutSeconds: Math.ceil(timeoutMs / 1000)
+        timeoutSeconds: Math.ceil(timeoutMs / 1000),
       },
       correlationId,
     });
@@ -238,22 +238,22 @@ export class UpstreamTimeoutError extends MCPError {
  */
 export class UpstreamError extends MCPError {
   constructor(
-    service: string, 
-    statusCode: number, 
-    message: string, 
-    correlationId?: string
+    service: string,
+    statusCode: number,
+    message: string,
+    correlationId?: string,
   ) {
-    const userMessage = statusCode >= 500 
+    const userMessage = statusCode >= 500
       ? `${service} service is temporarily unavailable`
       : `${service} service returned an error`;
 
     const recoveryHint = statusCode >= 500
       ? 'The external service is experiencing issues. Please try again later'
       : statusCode === 404
-      ? 'The requested data was not found. Please verify your parameters'
-      : statusCode === 403
-      ? 'Access to the requested data is not permitted'
-      : 'Please check your request parameters and try again';
+        ? 'The requested data was not found. Please verify your parameters'
+        : statusCode === 403
+          ? 'Access to the requested data is not permitted'
+          : 'Please check your request parameters and try again';
 
     super({
       code: 'UPSTREAM_ERROR',
@@ -261,10 +261,10 @@ export class UpstreamError extends MCPError {
       statusCode: statusCode >= 500 ? 502 : statusCode,
       userMessage,
       recoveryHint,
-      details: { 
-        service, 
-        upstreamStatusCode: statusCode, 
-        upstreamMessage: message 
+      details: {
+        service,
+        upstreamStatusCode: statusCode,
+        upstreamMessage: message,
       },
       correlationId,
     });
@@ -286,10 +286,10 @@ export class CircuitBreakerError extends MCPError {
       statusCode: 503,
       userMessage: `${service} service is temporarily unavailable`,
       recoveryHint: `Service is recovering from errors. Please try again in ${Math.ceil(resetTimeMs / 1000)} seconds`,
-      details: { 
-        service, 
+      details: {
+        service,
         resetTimeMs,
-        resetTimeSeconds: Math.ceil(resetTimeMs / 1000)
+        resetTimeSeconds: Math.ceil(resetTimeMs / 1000),
       },
       correlationId,
     });
@@ -313,10 +313,10 @@ export class NotFoundError extends MCPError {
       recoveryHint: resource.includes('storm') || resource.includes('hurricane')
         ? 'Check the storm ID format (e.g., AL052024) or use get_active_storms to find current storms'
         : `Please verify the ${resource.toLowerCase()} identifier and try again`,
-      details: { 
-        resource, 
+      details: {
+        resource,
         identifier,
-        resourceType: resource.toLowerCase()
+        resourceType: resource.toLowerCase(),
       },
       correlationId,
     });
@@ -338,10 +338,10 @@ export class ConfigurationError extends MCPError {
       statusCode: 500,
       userMessage: 'Server configuration issue',
       recoveryHint: 'This is a server-side configuration problem. Please contact support',
-      details: { 
-        setting, 
+      details: {
+        setting,
         reason,
-        isServerError: true
+        isServerError: true,
       },
       correlationId,
     });
@@ -357,7 +357,7 @@ export class ConfigurationError extends MCPError {
  */
 export function createValidationError(
   zodError: any,
-  correlationId?: string
+  correlationId?: string,
 ): ValidationError | SchemaValidationError {
   if (zodError.errors && Array.isArray(zodError.errors)) {
     const errors = zodError.errors.map((err: any) => ({
@@ -383,7 +383,7 @@ export function createValidationError(
 export function createUpstreamError(
   service: string,
   response: { status: number; statusText: string; data?: any },
-  correlationId?: string
+  correlationId?: string,
 ): UpstreamError {
   const message = response.data?.message || response.statusText || 'Unknown error';
   return new UpstreamError(service, response.status, message, correlationId);
@@ -395,7 +395,7 @@ export function createUpstreamError(
 export function wrapError(
   error: unknown,
   operation: string,
-  correlationId?: string
+  correlationId?: string,
 ): MCPError {
   if (error instanceof MCPError) {
     return error;
@@ -408,10 +408,10 @@ export function wrapError(
       statusCode: 500,
       userMessage: 'An internal error occurred',
       recoveryHint: 'Please try again. If the problem persists, contact support',
-      details: { 
-        operation, 
+      details: {
+        operation,
         originalError: error.message,
-        errorType: error.constructor.name
+        errorType: error.constructor.name,
       },
       correlationId,
     });
@@ -423,9 +423,9 @@ export function wrapError(
     statusCode: 500,
     userMessage: 'An unexpected error occurred',
     recoveryHint: 'Please try again. If the problem persists, contact support',
-    details: { 
-      operation, 
-      originalError: String(error) 
+    details: {
+      operation,
+      originalError: String(error),
     },
     correlationId,
   });
@@ -455,7 +455,7 @@ export function isRecoverableError(error: MCPError): boolean {
     'CIRCUIT_BREAKER_OPEN',
     'RATE_LIMIT_EXCEEDED',
   ];
-  
+
   return recoverableCodes.includes(error.code as ErrorCode);
 }
 
@@ -464,13 +464,34 @@ export function isRecoverableError(error: MCPError): boolean {
  */
 export function getRetryDelay(error: MCPError): number {
   switch (error.code) {
-    case 'RATE_LIMIT_EXCEEDED':
-      return error.details.retryAfterMs || 60000;
-    case 'CIRCUIT_BREAKER_OPEN':
-      return error.details.resetTimeMs || 30000;
-    case 'UPSTREAM_TIMEOUT':
-      return 5000; // 5 seconds
-    default:
-      return 10000; // 10 seconds default
+  case 'RATE_LIMIT_EXCEEDED':
+    return error.details.retryAfterMs || 60000;
+  case 'CIRCUIT_BREAKER_OPEN':
+    return error.details.resetTimeMs || 30000;
+  case 'UPSTREAM_TIMEOUT':
+    return 5000; // 5 seconds
+  default:
+    return 10000; // 10 seconds default
+  }
+}
+
+// =============================================================================
+// CACHE ERRORS
+// =============================================================================
+
+/**
+ * Cache-related error class
+ */
+export class CacheError extends MCPError {
+  constructor(operation: string, details?: any, correlationId?: string) {
+    super({
+      code: 'CACHE_ERROR',
+      message: `Cache operation failed: ${operation}`,
+      statusCode: 500,
+      userMessage: 'A caching error occurred',
+      recoveryHint: 'Please try again or contact support if the issue persists',
+      details,
+      correlationId,
+    });
   }
 }

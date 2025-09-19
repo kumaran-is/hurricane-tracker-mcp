@@ -308,9 +308,14 @@ export interface IBTrACSRecord {
 
 export interface HurricaneTrackerConfig {
   transport: {
-    type: 'stdio' | 'http' | 'sse';
+    type: 'stdio' | 'http';
     port?: number;
     host?: string;
+    httpPort?: number;
+    httpHost?: string;
+    httpCors?: {
+      allowedOrigins: string[];
+    };
   };
   dataSources: {
     nws: {
@@ -340,8 +345,16 @@ export interface HurricaneTrackerConfig {
     connectionTimeoutMs: number;
   };
   security: {
+    authEnabled: boolean;
+    apiKeys: string[];
+    sessionTimeout: number;
+    allowedOrigins: string;
     rateLimitPerClient: number;
     rateLimitWindowMs: number;
+    rateLimitEnabled: boolean;
+    rateLimitBurst: number;
+    rateLimitBlockDuration: number;
+    rateLimitWhitelist: string[];
     maxRequestSizeBytes: number;
     enableAuditLogging: boolean;
     enableInputSanitization: boolean;
@@ -483,7 +496,7 @@ export interface HealthStatus {
 // =============================================================================
 
 export interface TransportConfig {
-  type: 'stdio' | 'http' | 'sse';
+  type: 'stdio' | 'http';
   options?: {
     port?: number;
     host?: string;
@@ -501,4 +514,87 @@ export interface Transport {
   onMessage(handler: (message: any) => Promise<any>): void;
   onError(handler: (error: Error) => void): void;
   onClose(handler: () => void): void;
+}
+
+// =============================================================================
+// ADDITIONAL HURRICANE CACHE TYPES
+// =============================================================================
+
+export interface ActiveHurricane {
+  id: string;
+  name: string;
+  basin: BasinCode;
+  year: number;
+  status: HurricaneStatus;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  windSpeed: number;
+  pressure: number;
+  category: number;
+  movement: {
+    direction: number;
+    speed: number;
+  };
+  lastUpdate: string;
+}
+
+export interface HurricaneTrack {
+  stormId: string;
+  name: string;
+  points: Array<{
+    timestamp: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+    windSpeed: number;
+    pressure: number;
+    category: number;
+  }>;
+}
+
+export interface HurricaneForecast {
+  stormId: string;
+  name: string;
+  forecastPoints: Array<{
+    forecastTime: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+    windSpeed: number;
+    pressure: number;
+    category: number;
+    uncertainty: {
+      radiusOfUncertainty: number;
+      windSpeedUncertainty: number;
+    };
+  }>;
+  issuedAt: string;
+  validUntil: string;
+}
+
+export interface HistoricalHurricane {
+  id: string;
+  name: string;
+  basin: BasinCode;
+  year: number;
+  season: number;
+  startDate: string;
+  endDate: string;
+  maxWindSpeed: number;
+  minPressure: number;
+  maxCategory: number;
+  landfalls: Array<{
+    location: string;
+    date: string;
+    windSpeed: number;
+    category: number;
+  }>;
+  damages?: {
+    economic: number;
+    fatalities: number;
+  };
 }

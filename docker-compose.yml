@@ -1,0 +1,90 @@
+services:
+  hurricane-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: hurricane-tracker-mcp
+    restart: unless-stopped
+    ports:
+      # MCP HTTP transport port
+      - "${HTTP_PORT:-8080}:${HTTP_PORT:-8080}"
+      # Metrics endpoint port (optional)
+      - "${METRICS_PORT:-9090}:${METRICS_PORT:-9090}"
+    environment:
+      # Transport Configuration (override from .env if needed)
+      MCP_TRANSPORT: ${MCP_TRANSPORT:-http}
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      HTTP_HOST: ${HTTP_HOST:-0.0.0.0}
+
+      # Logging Configuration
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      PRETTY_LOGS: "false"
+      NODE_ENV: ${NODE_ENV:-production}
+
+      # In-Memory Cache Configuration (using lru-cache)
+      CACHE_MAX_SIZE: ${CACHE_MAX_SIZE:-1000}
+      CACHE_CURRENT_HURRICANES_TTL: ${CACHE_CURRENT_HURRICANES_TTL:-300000}
+      CACHE_FORECAST_TTL: ${CACHE_FORECAST_TTL:-900000}
+      CACHE_ALERT_TTL: ${CACHE_ALERT_TTL:-120000}
+      CACHE_TRACK_TTL: ${CACHE_TRACK_TTL:-600000}
+      CACHE_HISTORICAL_TTL: ${CACHE_HISTORICAL_TTL:-86400000}
+
+      # API Configuration
+      REQUEST_TIMEOUT_MS: ${REQUEST_TIMEOUT_MS:-30000}
+      CONNECTION_TIMEOUT_MS: ${CONNECTION_TIMEOUT_MS:-10000}
+      MAX_RETRIES: ${MAX_RETRIES:-3}
+
+      # Security Configuration
+      AUTH_ENABLED: ${AUTH_ENABLED:-false}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_PER_CLIENT: ${RATE_LIMIT_PER_CLIENT:-100}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+      ENABLE_INPUT_SANITIZATION: ${ENABLE_INPUT_SANITIZATION:-true}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+
+      # Resilience Configuration
+      CIRCUIT_BREAKER_FAILURE_THRESHOLD: ${CIRCUIT_BREAKER_FAILURE_THRESHOLD:-5}
+      CIRCUIT_BREAKER_RESET_TIMEOUT_MS: ${CIRCUIT_BREAKER_RESET_TIMEOUT_MS:-60000}
+      RETRY_BASE_DELAY_MS: ${RETRY_BASE_DELAY_MS:-1000}
+      RETRY_MAX_DELAY_MS: ${RETRY_MAX_DELAY_MS:-10000}
+
+      # Health Check Configuration
+      ENABLE_HEALTH_CHECKS: ${ENABLE_HEALTH_CHECKS:-true}
+      HEALTH_CHECK_INTERVAL_MS: ${HEALTH_CHECK_INTERVAL_MS:-30000}
+      HEALTH_CHECK_TIMEOUT_MS: ${HEALTH_CHECK_TIMEOUT_MS:-5000}
+
+      # Feature Flags
+      ENABLE_HISTORICAL_SEARCH: ${ENABLE_HISTORICAL_SEARCH:-true}
+      ENABLE_DETAILED_FORECASTS: ${ENABLE_DETAILED_FORECASTS:-true}
+      ENABLE_GEOJSON_RESPONSES: ${ENABLE_GEOJSON_RESPONSES:-true}
+      ENABLE_ALERT_NOTIFICATIONS: ${ENABLE_ALERT_NOTIFICATIONS:-true}
+
+    volumes:
+      # Optional: Mount logs directory for persistent logging
+      - ./logs:/app/logs
+
+    # Resource limits for container
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Health check for container orchestration
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:${HTTP_PORT:-8080}/health', (r) => {r.statusCode === 200 ? process.exit(0) : process.exit(1)})"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
