@@ -173,6 +173,18 @@ Format the response in a clear, organized way that I can easily understand for t
 
 #### **Real-World Use Cases:**
 
+ **Cruise Ship Safety Check:**
+ ```bash
+  I'm the safety officer for a cruise line. We have ships departing from Miami next week heading to Cozumel, Mexico.
+  Check:
+  1. Are there any active storms in the Atlantic or Caribbean?
+  2. What's the forecast cone for any storms near our route?
+  3. Check for alerts at our ports: Miami, Key West, and Cozumel
+  4. Show me any major storms that hit this route in the past 2 years
+
+  Should we consider rerouting or delaying departures?
+  ```
+
 **Emergency Preparedness Check:**
 ```bash
 My family lives along the US East Coast from Florida to North Carolina. Are there any active hurricanes or tropical storms that could affect this region in the next week? 
@@ -185,6 +197,16 @@ Check for:
 This is for emergency preparedness planning, so please be thorough.
 ```
 
+**Emergency Evacuation Planning:**
+```bash
+I'm the emergency manager for Monroe County, Florida. We need to decide on evacuations:
+1. Show all active storms in the Gulf of Mexico
+2. For any Gulf storms or Atlantic Hurricanes or Caribbean Storms what's their 5-day forecast cone?
+3. Check hurricane alerts for Monroe County, Florida
+4. When was the last major hurricane to hit our area? Search the past 10 years.
+
+Give me a GO/NO-GO recommendation for mandatory evacuations.
+```
 **Insurance Risk Assessment:**
 ```bash
 I work for an insurance company and need hurricane risk data for property assessments.
