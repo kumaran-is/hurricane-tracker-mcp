@@ -88,18 +88,12 @@ export class HurricaneMcpServer {
         title: 'Get Active Storms',
         description: 'List all active tropical cyclones globally with key metadata and links',
         inputSchema: {
-          type: 'object',
-          properties: {
-            basin: {
-              type: 'string',
-              enum: ['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI'],
-              description: 'Filter by basin code: AL (Atlantic), EP (Eastern Pacific), CP (Central Pacific), WP (Western Pacific), SI (South Indian)'
-            }
-          },
-          additionalProperties: false
+          basin: z.enum(['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI'])
+            .optional()
+            .describe('Filter by basin code: AL (Atlantic), EP (Eastern Pacific), CP (Central Pacific), WP (Western Pacific), SI (South Indian)')
         } as any,
       },
-      async (args: any) => this.handleGetActiveStorms(args)
+      async ({ basin }, _extra) => this.handleGetActiveStorms({ basin })
     );
 
     // Tool 2: Get Storm Cone
@@ -109,19 +103,12 @@ export class HurricaneMcpServer {
         title: 'Get Storm Cone',
         description: 'Get cone of uncertainty and forecast points for a specific storm',
         inputSchema: {
-          type: 'object',
-          properties: {
-            stormId: {
-              type: 'string',
-              pattern: '^[A-Z]{2}[0-9]{6}$',
-              description: 'Storm identifier (e.g., AL052024 for Atlantic storm 5 in 2024)'
-            }
-          },
-          required: ['stormId'],
-          additionalProperties: false
+          stormId: z.string()
+            .regex(/^[A-Z]{2}[0-9]{6}$/, 'Storm ID must be in format like AL052024')
+            .describe('Storm identifier (e.g., AL052024 for Atlantic storm 5 in 2024)')
         } as any,
       },
-      async (args: any) => this.handleGetStormCone(args)
+      async ({ stormId }, _extra) => this.handleGetStormCone({ stormId })
     );
 
     // Tool 3: Get Storm Track
@@ -131,19 +118,12 @@ export class HurricaneMcpServer {
         title: 'Get Storm Track',
         description: 'Get historical track (past positions) for a storm',
         inputSchema: {
-          type: 'object',
-          properties: {
-            stormId: {
-              type: 'string',
-              pattern: '^[A-Z]{2}[0-9]{6}$',
-              description: 'Storm identifier'
-            }
-          },
-          required: ['stormId'],
-          additionalProperties: false
+          stormId: z.string()
+            .regex(/^[A-Z]{2}[0-9]{6}$/, 'Storm ID must be in format like AL052024')
+            .describe('Storm identifier')
         } as any,
       },
-      async (args: any) => this.handleGetStormTrack(args)
+      async ({ stormId }, _extra) => this.handleGetStormTrack({ stormId })
     );
 
     // Tool 4: Get Local Hurricane Alerts
@@ -153,26 +133,17 @@ export class HurricaneMcpServer {
         title: 'Get Local Hurricane Alerts',
         description: 'Get active hurricane-related alerts for a specific location',
         inputSchema: {
-          type: 'object',
-          properties: {
-            lat: {
-              type: 'number',
-              minimum: -90,
-              maximum: 90,
-              description: 'Latitude in decimal degrees'
-            },
-            lon: {
-              type: 'number',
-              minimum: -180,
-              maximum: 180,
-              description: 'Longitude in decimal degrees'
-            }
-          },
-          required: ['lat', 'lon'],
-          additionalProperties: false
+          lat: z.number()
+            .min(-90)
+            .max(90)
+            .describe('Latitude in decimal degrees'),
+          lon: z.number()
+            .min(-180)
+            .max(180)
+            .describe('Longitude in decimal degrees')
         } as any,
       },
-      async (args: any) => this.handleGetLocalHurricaneAlerts(args)
+      async ({ lat, lon }, _extra) => this.handleGetLocalHurricaneAlerts({ lat, lon })
     );
 
     // Tool 5: Search Historical Tracks
@@ -182,53 +153,22 @@ export class HurricaneMcpServer {
         title: 'Search Historical Tracks',
         description: 'Query historical hurricane tracks by area and date range',
         inputSchema: {
-          type: 'object',
-          properties: {
-            aoi: {
-              type: 'object',
-              description: 'Area of interest as GeoJSON Polygon',
-              properties: {
-                type: {
-                  type: 'string',
-                  enum: ['Polygon']
-                },
-                coordinates: {
-                  type: 'array',
-                  items: {
-                    type: 'array',
-                    items: {
-                      type: 'array',
-                      items: {
-                        type: 'number'
-                      }
-                    }
-                  }
-                }
-              },
-              required: ['type', 'coordinates'],
-              additionalProperties: false
-            },
-            start: {
-              type: 'string',
-              pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$',
-              description: 'Start date for search (YYYY-MM-DD format)'
-            },
-            end: {
-              type: 'string',
-              pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$',
-              description: 'End date for search (YYYY-MM-DD format)'
-            },
-            basin: {
-              type: 'string',
-              enum: ['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI'],
-              description: 'Filter by basin code'
-            }
-          },
-          required: ['aoi', 'start', 'end'],
-          additionalProperties: false
+          aoi: z.object({
+            type: z.literal('Polygon'),
+            coordinates: z.array(z.array(z.array(z.number())))
+          }).describe('Area of interest as GeoJSON Polygon'),
+          start: z.string()
+            .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format')
+            .describe('Start date for search (YYYY-MM-DD format)'),
+          end: z.string()
+            .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, 'Date must be YYYY-MM-DD format')
+            .describe('End date for search (YYYY-MM-DD format)'),
+          basin: z.enum(['AL', 'EP', 'CP', 'WP', 'NP', 'SP', 'SI'])
+            .optional()
+            .describe('Filter by basin code')
         } as any,
       },
-      async (args: any) => this.handleSearchHistoricalTracks(args)
+      async ({ aoi, start, end, basin }, _extra) => this.handleSearchHistoricalTracks({ aoi, start, end, basin })
     );
 
     logger.info({ toolCount: 5 }, 'Hurricane tools registered with MCP server');
