@@ -4,9 +4,8 @@
  */
 
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);

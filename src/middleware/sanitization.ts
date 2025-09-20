@@ -213,7 +213,9 @@ export function createHurricaneSanitizationMiddleware() {
             stormId: sanitized.stormId,
           }, 'Invalid storm ID format in hurricane input');
 
-          throw new Error(`Invalid storm ID format '${sanitized.stormId}'. Expected format: BASINNNNYYYY (e.g., AL012023)`);
+          throw new Error(
+            `Invalid storm ID format '${sanitized.stormId}'. Expected format: BASINNNNYYYY (e.g., AL012023)`,
+          );
         }
 
         sanitized.stormId = sanitized.stormId.toUpperCase();

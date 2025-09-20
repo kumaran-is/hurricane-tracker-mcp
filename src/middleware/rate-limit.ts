@@ -41,13 +41,17 @@ const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
 class TokenBucket {
   private tokens: number;
   private lastRefill: number;
+  private refillRate: number = 10; // Default 10 tokens per second
 
   constructor(
     private capacity: number,
-    private refillRate: number, // tokens per second
+    refillRate?: number,
   ) {
     this.tokens = capacity;
     this.lastRefill = Date.now();
+    if (refillRate) {
+      this.refillRate = refillRate;
+    }
   }
 
   /**
@@ -102,8 +106,13 @@ class TokenBucket {
  */
 class SlidingWindow {
   private requests: number[] = [];
+  private windowSizeMs: number = 60000; // Default 60 seconds
 
-  constructor(private windowSizeMs: number) {}
+  constructor(windowSizeMs?: number) {
+    if (windowSizeMs) {
+      this.windowSizeMs = windowSizeMs;
+    }
+  }
 
   /**
    * Add a request timestamp
@@ -195,7 +204,9 @@ export class RateLimitMiddleware {
           this.blockIP(ip);
 
           const oldestRequest = window.getOldestRequest();
-          const resetTime = oldestRequest ? oldestRequest + this.config.windowSizeMs : Date.now() + this.config.windowSizeMs;
+          const resetTime = oldestRequest ?
+            oldestRequest + this.config.windowSizeMs :
+            Date.now() + this.config.windowSizeMs;
           const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
 
           return this.blockRequest(retryAfter);
@@ -371,12 +382,7 @@ export class RateLimitMiddleware {
  * Rate limit error class
  */
 export class RateLimitError extends Error {
-  constructor(
-    message: string,
-    public retryAfter: number,
-    public limit: number,
-    public remaining: number,
-  ) {
+  constructor(message: string) {
     super(message);
     this.name = 'RateLimitError';
   }
@@ -386,9 +392,11 @@ export class RateLimitError extends Error {
 export const rateLimitMiddleware = new RateLimitMiddleware();
 
 // Set up periodic cleanup
-setInterval(() => {
-  rateLimitMiddleware.cleanup();
-}, 60000); // Clean up every minute
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    rateLimitMiddleware.cleanup();
+  }, 60000); // Clean up every minute
+}
 
 /**
  * Rate limiting utilities

@@ -108,7 +108,8 @@ export function validateJSONRPCMessage(message: any): {
     }
   } else if (message.id !== undefined) {
     // Response - must have result or error
-    if (!message.hasOwnProperty('result') && !message.hasOwnProperty('error')) {
+    if (!Object.prototype.hasOwnProperty.call(message, 'result') &&
+        !Object.prototype.hasOwnProperty.call(message, 'error')) {
       return {
         valid: false,
         type: 'unknown',
@@ -120,7 +121,8 @@ export function validateJSONRPCMessage(message: any): {
     }
 
     // Cannot have both result and error
-    if (message.hasOwnProperty('result') && message.hasOwnProperty('error')) {
+    if (Object.prototype.hasOwnProperty.call(message, 'result') &&
+        Object.prototype.hasOwnProperty.call(message, 'error')) {
       return {
         valid: false,
         type: 'unknown',
@@ -246,8 +248,8 @@ export function validateBatchMessage(messages: any[]): {
 // =============================================================================
 
 export interface JSONRPCHandler {
-  handleRequest(request: MCPRequest): Promise<any>;
-  handleNotification(notification: MCPNotification): Promise<void>;
+  handleRequest(_request: MCPRequest): Promise<any>;
+  handleNotification?: (_notification: MCPNotification) => Promise<void>;
 }
 
 /**
@@ -320,17 +322,23 @@ export class JSONRPCProcessor {
         { correlationId, message, validationError: validation.error },
         'Invalid JSON-RPC message',
       );
-      return createErrorResponse(message.id || null, validation.error!);
+      return createErrorResponse(
+        message.id || null,
+        validation.error || { code: JSON_RPC_ERRORS.INVALID_REQUEST, message: 'Invalid request' },
+      );
     }
 
     try {
       switch (validation.type) {
-      case 'request':
+      case 'request': {
         const result = await this.handler.handleRequest(message as MCPRequest);
         return createSuccessResponse(message.id, result);
+      }
 
       case 'notification':
-        await this.handler.handleNotification(message as MCPNotification);
+        if (this.handler.handleNotification) {
+          await this.handler.handleNotification(message as MCPNotification);
+        }
         return null; // Notifications don't get responses
 
       case 'response':
@@ -368,7 +376,10 @@ export class JSONRPCProcessor {
   ): Promise<MCPResponse[]> {
     const batchValidation = validateBatchMessage(messages);
     if (!batchValidation.valid) {
-      return [createErrorResponse(null, batchValidation.error!)];
+      return [createErrorResponse(
+        null,
+        batchValidation.error || { code: JSON_RPC_ERRORS.INVALID_REQUEST, message: 'Invalid batch' },
+      )];
     }
 
     logger.debug(

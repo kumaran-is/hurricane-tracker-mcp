@@ -718,4 +718,6 @@ export class HurricaneRateLimitValidator {
 export const hurricaneRateLimiter = new HurricaneRateLimitValidator();
 
 // Cleanup interval
-setInterval(() => hurricaneRateLimiter.cleanup(), 60000);
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => hurricaneRateLimiter.cleanup(), 60000);
+}

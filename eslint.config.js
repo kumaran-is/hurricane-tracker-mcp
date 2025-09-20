@@ -18,6 +18,10 @@ export default [
         Buffer: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     plugins: {
@@ -32,6 +36,7 @@ export default [
       '@typescript-eslint/no-non-null-assertion': 'warn',
 
       // General code quality rules
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }], // Allow unused with underscore
       'no-console': 'off', // Allow console for logging
       'no-debugger': 'error',
       'prefer-const': 'error',
