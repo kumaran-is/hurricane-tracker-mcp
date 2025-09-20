@@ -14,8 +14,8 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
 [![Integration Tests](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/integration-tests.yml)
 [![Security Scan](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/security.yml)
 [![Docker Build](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/docker.yml)
-[![CodeQL](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/codeql.yml)
 [![Performance](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/performance.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/performance.yml)
+[![Release](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/release.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/release.yml)
 
 ## 📑 Table of Contents
 
