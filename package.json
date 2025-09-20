@@ -1,6 +1,6 @@
 {
   "name": "hurricane-tracker-mcp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Production-grade MCP server providing real-time hurricane tracking, forecast cones, local alerts, and historical storm data through LLM-optimized tools",
   "type": "module",
   "main": "dist/server.js",
