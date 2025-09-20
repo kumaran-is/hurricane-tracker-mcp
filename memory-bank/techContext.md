@@ -40,6 +40,16 @@
 - **TSX 4.20.5**: Fast TypeScript execution for development
 - **Pino-Pretty 13.1.1**: Beautiful log formatting for development
 
+### CI/CD & Automation Infrastructure
+- **GitHub Actions**: Comprehensive workflow automation with 8 specialized pipelines
+- **Docker Multi-Platform**: Linux/AMD64 and Linux/ARM64 container builds
+- **GitHub Container Registry**: Automated Docker image publishing
+- **Automated Releases**: Semantic versioning with changelog generation
+- **Security Scanning**: Multi-layer security analysis and vulnerability detection
+- **Cross-Platform Testing**: Ubuntu, Windows, and macOS compatibility verification
+- **Performance Monitoring**: Automated performance benchmarks and regression detection
+- **Documentation Automation**: API docs generation and README badge updates
+
 ### External APIs & Integration
 - **NOAA Hurricane Database**: Primary data source for active storm information
 - **National Hurricane Center (NHC)**: Real-time hurricane tracking and forecast cones
