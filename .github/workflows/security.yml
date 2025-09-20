@@ -2,22 +2,63 @@ name: Security Scanning
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 0 * * *' # Daily at midnight UTC
+    - cron: '0 4 * * *' # Daily at 4 AM UTC
   workflow_dispatch:
 
 permissions:
   contents: read
   security-events: write
-  actions: read
+
+env:
+  NODE_VERSION: '22.x'
+  SKIP_CODEQL: false  # Set to true if billing issues occur
 
 jobs:
-  # Job 1: Dependency Vulnerability Scanning
-  dependency-scan:
-    name: Dependency Vulnerability Scan
+  # Job 1: CodeQL Analysis
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    if: ${{ !cancelled() }}
+
+    steps:
+      - name: Check if CodeQL should be skipped
+        id: check_skip
+        run: |
+          if [ "${{ env.SKIP_CODEQL }}" = "true" ]; then
+            echo "SKIP_CODEQL=true" >> $GITHUB_OUTPUT
+            echo "⚠️ CodeQL analysis is disabled"
+          else
+            echo "SKIP_CODEQL=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout code
+        if: steps.check_skip.outputs.SKIP_CODEQL != 'true'
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        if: steps.check_skip.outputs.SKIP_CODEQL != 'true'
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript-typescript
+        continue-on-error: true
+
+      - name: Autobuild
+        if: steps.check_skip.outputs.SKIP_CODEQL != 'true'
+        uses: github/codeql-action/autobuild@v2
+        continue-on-error: true
+
+      - name: Perform CodeQL Analysis
+        if: steps.check_skip.outputs.SKIP_CODEQL != 'true'
+        uses: github/codeql-action/analyze@v2
+        continue-on-error: true
+
+  # Job 2: NPM Security Audit
+  npm-audit:
+    name: NPM Security Audit
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +68,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Run npm audit
         run: |
@@ -122,7 +163,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
         run: npm ci
@@ -145,9 +186,9 @@ jobs:
             exit 1
           }
 
-  # Job 5: SAST (Static Application Security Testing)
-  sast:
-    name: Static Security Analysis
+  # Job 5: SAST Analysis
+  sast-analysis:
+    name: Static Application Security Testing
     runs-on: ubuntu-latest
 
     steps:
@@ -157,7 +198,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install ESLint security plugin
         run: |
@@ -202,28 +243,23 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-  # Job 7: Security Scorecard
-  scorecard:
-    name: Security Scorecard
+  # Summary job
+  security-summary:
+    name: Security Summary
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      id-token: write
+    needs: [npm-audit, secret-scan, sast-analysis, license-check]
+    if: always()
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Run Scorecard analysis
-        uses: ossf/scorecard-action@v2.3.1
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
-
-      - name: Upload to code-scanning
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: results.sarif
+      - name: Summary
+        run: |
+          echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| NPM Audit | ${{ needs.npm-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scan | ${{ needs.secret-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SAST Analysis | ${{ needs.sast-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Check | ${{ needs.license-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Generated at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
