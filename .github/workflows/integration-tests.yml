@@ -92,29 +92,43 @@ jobs:
   coverage:
     name: Code Coverage Analysis
     runs-on: ubuntu-latest
-    if: env.SKIP_COVERAGE != 'true'  # Skip if flag is set
+    if: ${{ !cancelled() }}  # Always create job, control skipping inside
 
     steps:
+      - name: Check if coverage should be skipped
+        id: check_skip
+        run: |
+          if [ "${{ env.SKIP_COVERAGE }}" = "true" ]; then
+            echo "SKIP_COVERAGE=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Coverage analysis is temporarily disabled"
+          else
+            echo "SKIP_COVERAGE=false" >> $GITHUB_OUTPUT
+          fi
       - name: Checkout code
+        if: steps.check_skip.outputs.SKIP_COVERAGE != 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Full history for better coverage tracking
 
       - name: Setup Node.js
+        if: steps.check_skip.outputs.SKIP_COVERAGE != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Cache dependencies
+        if: steps.check_skip.outputs.SKIP_COVERAGE != 'true'
         uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
+        if: steps.check_skip.outputs.SKIP_COVERAGE != 'true'
         run: npm ci
 
       - name: Run tests with coverage
+        if: steps.check_skip.outputs.SKIP_COVERAGE != 'true'
         run: |
           # Check if coverage script exists
           if npm run test:coverage --silent 2>/dev/null; then

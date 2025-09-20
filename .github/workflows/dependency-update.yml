@@ -185,7 +185,7 @@ jobs:
   docker-updates:
     name: Docker Image Updates
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('Dockerfile') != '' }}
+    if: hashFiles('Dockerfile') != ''
 
     steps:
       - name: Checkout code

@@ -54,27 +54,42 @@ jobs:
   test-unit:
     name: Unit Tests
     runs-on: ubuntu-latest
-    if: env.SKIP_UNIT_TESTS != 'true'  # Skip if flag is set
+    if: ${{ !cancelled() }}  # Always create job, control skipping inside
 
     steps:
+      - name: Check if tests should be skipped
+        id: check_skip
+        run: |
+          if [ "${{ env.SKIP_UNIT_TESTS }}" = "true" ]; then
+            echo "SKIP_TESTS=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Unit tests are temporarily disabled"
+          else
+            echo "SKIP_TESTS=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout code
+        if: steps.check_skip.outputs.SKIP_TESTS != 'true'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: steps.check_skip.outputs.SKIP_TESTS != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Cache dependencies
+        if: steps.check_skip.outputs.SKIP_TESTS != 'true'
         uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
+        if: steps.check_skip.outputs.SKIP_TESTS != 'true'
         run: npm ci
 
       - name: Run unit tests
+        if: steps.check_skip.outputs.SKIP_TESTS != 'true'
         run: |
           # Check if test script exists and has actual tests
           if npm run test --silent 2>/dev/null; then
@@ -90,7 +105,7 @@ jobs:
           LOG_LEVEL: error
 
       - name: Upload test results
-        if: always()
+        if: always() && steps.check_skip.outputs.SKIP_TESTS != 'true'
         uses: actions/upload-artifact@v3
         with:
           name: test-results
