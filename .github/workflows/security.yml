@@ -1,0 +1,229 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # Job 1: Dependency Vulnerability Scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Run npm audit
+        run: |
+          npm audit --production --audit-level=moderate || true
+          npm audit --production --json > npm-audit.json || true
+
+      - name: Parse audit results
+        run: |
+          echo "## NPM Audit Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f npm-audit.json ]; then
+            VULNS=$(cat npm-audit.json | jq '.metadata.vulnerabilities')
+            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Critical | $(echo $VULNS | jq '.critical') |" >> $GITHUB_STEP_SUMMARY
+            echo "| High | $(echo $VULNS | jq '.high') |" >> $GITHUB_STEP_SUMMARY
+            echo "| Moderate | $(echo $VULNS | jq '.moderate') |" >> $GITHUB_STEP_SUMMARY
+            echo "| Low | $(echo $VULNS | jq '.low') |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check for critical vulnerabilities
+        run: |
+          if [ -f npm-audit.json ]; then
+            CRITICAL=$(cat npm-audit.json | jq '.metadata.vulnerabilities.critical')
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "Critical vulnerabilities found!"
+              exit 1
+            fi
+          fi
+
+  # Job 2: OWASP Dependency Check
+  owasp-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'hurricane-tracker-mcp'
+          path: '.'
+          format: 'HTML'
+          args: >
+            --enableRetired
+            --enableExperimental
+            --nodePackageSkipDevDependencies
+
+      - name: Upload OWASP results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: owasp-dependency-check-report
+          path: reports/
+
+  # Job 3: Secret Scanning
+  secret-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: GitLeaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 4: License Compliance
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check licenses
+        run: |
+          npx license-checker --production --summary --out licenses.json
+
+          echo "## License Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat licenses.json | jq '.summary' >> $GITHUB_STEP_SUMMARY || echo "No summary available" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for prohibited licenses
+        run: |
+          PROHIBITED="GPL|AGPL|LGPL"
+          npx license-checker --production --exclude "$PROHIBITED" || {
+            echo "Prohibited licenses found!"
+            exit 1
+          }
+
+  # Job 5: SAST (Static Application Security Testing)
+  sast:
+    name: Static Security Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install ESLint security plugin
+        run: |
+          npm install --save-dev eslint-plugin-security
+
+      - name: Run security linting
+        run: |
+          npx eslint src/**/*.ts --plugin security --rule 'security/detect-object-injection: error' --rule 'security/detect-non-literal-regexp: error' --rule 'security/detect-unsafe-regex: error' || true
+
+      - name: Semgrep Security Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/nodejs
+            p/typescript
+
+  # Job 6: Container Security (if using Docker)
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('Dockerfile') != '' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t hurricane-tracker-mcp:scan .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'hurricane-tracker-mcp:scan'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Job 7: Security Scorecard
+  scorecard:
+    name: Security Scorecard
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard analysis
+        uses: ossf/scorecard-action@v2.3.1
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload to code-scanning
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif

@@ -1,0 +1,274 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  # Job 1: Generate API Documentation
+  api-docs:
+    name: Generate API Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate TypeDoc
+        run: |
+          npx typedoc \
+            --out docs/api \
+            --name "Hurricane Tracker MCP API" \
+            --includeVersion \
+            --excludePrivate \
+            --excludeInternal \
+            --theme default \
+            --readme README.md \
+            src/
+
+      - name: Generate JSDoc
+        run: |
+          npx jsdoc \
+            -c jsdoc.json \
+            -d docs/jsdoc \
+            -r src/ || true
+
+      - name: Generate dependency graph
+        run: |
+          npx madge \
+            --image docs/dependency-graph.svg \
+            --circular \
+            --warning \
+            src/ || true
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-documentation
+          path: docs/
+
+  # Job 2: Generate Architecture Documentation
+  architecture-docs:
+    name: Architecture Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PlantUML
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+          wget https://github.com/plantuml/plantuml/releases/download/v1.2024.0/plantuml-1.2024.0.jar -O plantuml.jar
+
+      - name: Generate diagrams
+        run: |
+          mkdir -p docs/diagrams
+          
+          # Create architecture diagram
+          cat > architecture.puml << 'EOF'
+          @startuml architecture
+          !define RECTANGLE rectangle
+          
+          package "Hurricane Tracker MCP" {
+            [Transport Layer] as TL
+            [Protocol Layer] as PL
+            [Business Layer] as BL
+            [External APIs] as EA
+          }
+          
+          TL --> PL : Handles stdio/HTTP
+          PL --> BL : MCP Protocol
+          BL --> EA : NOAA/NHC APIs
+          EOF
+          
+          java -jar plantuml.jar -tsvg architecture.puml -o docs/diagrams/
+
+      - name: Generate Mermaid diagrams
+        run: |
+          npm install -g @mermaid-js/mermaid-cli
+          
+          # Create data flow diagram
+          cat > dataflow.mmd << 'EOF'
+          flowchart TD
+            Client[MCP Client] --> Server[MCP Server]
+            Server --> NOAA[NOAA/NHC API]
+            Server --> NWS[NWS API]
+            Server --> IBTrACS[IBTrACS Database]
+            NOAA --> Parser[Data Parser]
+            NWS --> Parser
+            IBTrACS --> Parser
+            Parser --> Response[MCP Response]
+            Response --> Client
+          EOF
+          
+          npx mmdc -i dataflow.mmd -o docs/diagrams/dataflow.svg
+
+  # Job 3: Markdown Documentation
+  markdown-docs:
+    name: Process Markdown Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Validate markdown
+        run: |
+          npm install -g markdownlint-cli
+          markdownlint '**/*.md' --ignore node_modules --ignore docs/api || true
+
+      - name: Generate table of contents
+        run: |
+          npm install -g markdown-toc
+          
+          for file in README.md docs/*.md; do
+            if [ -f "$file" ]; then
+              echo "Adding TOC to $file"
+              markdown-toc -i "$file" || true
+            fi
+          done
+
+      - name: Convert to PDF
+        run: |
+          npm install -g md-to-pdf
+          
+          md-to-pdf README.md --pdf-options '{ "format": "A4" }' || true
+          mv README.pdf docs/README.pdf || true
+
+      - name: Generate markdown stats
+        run: |
+          echo "## Documentation Statistics" > docs/stats.md
+          echo "" >> docs/stats.md
+          echo "| File | Lines | Words | Characters |" >> docs/stats.md
+          echo "|------|-------|-------|------------|" >> docs/stats.md
+          
+          for file in README.md docs/*.md; do
+            if [ -f "$file" ]; then
+              LINES=$(wc -l < "$file")
+              WORDS=$(wc -w < "$file")
+              CHARS=$(wc -c < "$file")
+              echo "| $(basename $file) | $LINES | $WORDS | $CHARS |" >> docs/stats.md
+            fi
+          done
+
+  # Job 4: Deploy to GitHub Pages
+  deploy-pages:
+    name: Deploy Documentation to Pages
+    runs-on: ubuntu-latest
+    needs: [api-docs, architecture-docs, markdown-docs]
+    if: github.ref == 'refs/heads/main'
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: api-documentation
+          path: docs/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Create index page
+        run: |
+          cat > docs/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Hurricane Tracker MCP Documentation</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; }
+              h1 { color: #333; }
+              .nav { list-style: none; padding: 0; }
+              .nav li { margin: 10px 0; }
+              .nav a { color: #0366d6; text-decoration: none; font-size: 18px; }
+              .nav a:hover { text-decoration: underline; }
+            </style>
+          </head>
+          <body>
+            <h1>🌀 Hurricane Tracker MCP Documentation</h1>
+            <ul class="nav">
+              <li><a href="api/index.html">📚 API Documentation</a></li>
+              <li><a href="jsdoc/index.html">📖 JSDoc Reference</a></li>
+              <li><a href="diagrams/">📊 Architecture Diagrams</a></li>
+              <li><a href="README.pdf">📄 README (PDF)</a></li>
+              <li><a href="stats.md">📈 Documentation Stats</a></li>
+            </ul>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: docs/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+
+  # Job 5: Wiki Documentation
+  wiki-docs:
+    name: Update Wiki
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout wiki
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+          token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Update wiki pages
+        run: |
+          if [ -d "wiki" ]; then
+            cp README.md wiki/Home.md || true
+            cp docs/CLAUDE_DESKTOP_SETUP.md wiki/Claude-Desktop-Setup.md || true
+            cp docs/CLINE_SETUP.md wiki/Cline-Setup.md || true
+            cp docs/MCP_INSPECTOR_TEST_GUIDE.md wiki/MCP-Inspector-Guide.md || true
+            
+            cd wiki
+            git config user.name "GitHub Action"
+            git config user.email "action@github.com"
+            git add -A
+            git commit -m "Update wiki from main branch" || true
+            git push || true
+          fi

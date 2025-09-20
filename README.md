@@ -2,6 +2,17 @@
 
 A production-grade LLM-friendly Model Context Protocol (MCP) server that provides real-time hurricane tracking, forecast cones, local alerts, and historical storm data through MCP tools for AI assistants like Cline.
 
+## 🚀 Build Status
+
+[![CI Pipeline](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/ci.yml)
+[![Integration Tests](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/integration-tests.yml)
+[![Security Scan](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/security.yml)
+[![Docker Build](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/docker.yml)
+[![CodeQL](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/codeql.yml)
+[![Performance](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/performance.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/performance.yml)
+
+## 🛠️ Tech Stack
+
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kumaran-is/hurricane-tracker-mcp)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
@@ -32,6 +43,7 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
   - [🌀 Available Hurricane Tools](#-available-hurricane-tools)
     - [Detailed Examples](#detailed-examples)
   - [📚 Documentation](#-documentation)
+  - [🚀 CI/CD Pipeline](#-cicd-pipeline)
   - [Running on Docker Container](#running-on-docker-container)
       - [1. Build and Run with Docker Compose](#1-build-and-run-with-docker-compose)
       - [2. Verify the Service is Running](#2-verify-the-service-is-running)
@@ -424,6 +436,22 @@ All tools now use **true real data patterns**:
 - **[CLINE_SETUP.md](docs/CLINE_SETUP.md)** - Complete setup guide for Cline (VS Code extension)
 - **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)** - Complete setup guide for Claude Desktop
 - **[MCP_INSPECTOR_TEST_GUIDE.md](docs/MCP_INSPECTOR_TEST_GUIDE.md)** - Comprehensive testing guide with MCP Inspector
+- **[GITHUB_ACTIONS_GUIDE.md](docs/GITHUB_ACTIONS_GUIDE.md)** - CI/CD pipeline documentation and workflow guide
+
+## 🚀 CI/CD Pipeline
+
+The project uses comprehensive GitHub Actions workflows for continuous integration and deployment. See the build status badges at the top of this README for real-time workflow status.
+
+### Workflow Features
+- **Automated Testing:** Unit, integration, and cross-platform tests (Node.js 22.x)
+- **Security Scanning:** Dependency audits, secret detection, SAST analysis
+- **Docker Support:** Multi-platform builds (amd64/arm64) with vulnerability scanning
+- **Performance Monitoring:** Startup benchmarks, memory profiling, load testing
+- **Release Automation:** Semantic versioning, changelog generation, Docker publishing
+- **Documentation:** Automated API docs, architecture diagrams, GitHub Pages deployment
+- **Dependency Management:** Weekly updates with automated PRs
+
+See [GitHub Actions Guide](docs/GITHUB_ACTIONS_GUIDE.md) for detailed workflow documentation.
 
 ## Running on Docker Container
 

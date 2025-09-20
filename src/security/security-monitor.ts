@@ -717,6 +717,8 @@ export class SecurityMonitor extends EventEmitter {
 export const securityMonitor = new SecurityMonitor();
 
 // Set up periodic cleanup
-setInterval(() => {
-  securityMonitor.cleanup();
-}, 300000); // Clean up every 5 minutes
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    securityMonitor.cleanup();
+  }, 300000); // Clean up every 5 minutes
+}

@@ -46,16 +46,13 @@ export class ContextManager {
     preferredResponseSize: parseInt(process.env.PREFERRED_RESPONSE_SIZE || '2000'),
   };
 
-  constructor(private readonly customLimits?: Partial<ContextLimits>) {}
+  constructor() {}
 
   /**
    * Get effective context limits (custom + defaults)
    */
   private getLimits(): ContextLimits {
-    return {
-      ...this.defaultLimits,
-      ...this.customLimits,
-    };
+    return this.defaultLimits;
   }
 
   /**
@@ -498,13 +495,8 @@ export class ContextManager {
   }
 }
 
-// Export singleton instance with configurable limits
-export const contextManager = new ContextManager({
-  maxInputTokens: parseInt(process.env.MAX_INPUT_TOKENS || '16000'),
-  maxOutputTokens: parseInt(process.env.MAX_OUTPUT_TOKENS || '16000'),
-  maxTotalTokens: parseInt(process.env.MAX_TOTAL_TOKENS || '16000'),
-  preferredResponseSize: parseInt(process.env.PREFERRED_RESPONSE_SIZE || '2000'),
-});
+// Export singleton instance
+export const contextManager = new ContextManager();
 
 /**
  * Hurricane-specific context optimization utilities
