@@ -2,17 +2,6 @@
 
 A production-grade LLM-friendly Model Context Protocol (MCP) server that provides real-time hurricane tracking, forecast cones, local alerts, and historical storm data through MCP tools for AI assistants like Cline.
 
-## 🚀 Build Status
-
-[![CI Pipeline](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/ci.yml)
-[![Integration Tests](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/integration-tests.yml)
-[![Security Scan](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/security.yml)
-[![Docker Build](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/docker.yml)
-[![CodeQL](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/codeql.yml)
-[![Performance](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/performance.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/performance.yml)
-
-## 🛠️ Tech Stack
-
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kumaran-is/hurricane-tracker-mcp)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
@@ -21,12 +10,20 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
 [![Zod](https://img.shields.io/badge/Zod-3.23-purple)](https://zod.dev/)
 [![SOLID](https://img.shields.io/badge/Architecture-SOLID-green)](https://en.wikipedia.org/wiki/SOLID)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![CI Pipeline](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/ci.yml)
+[![Integration Tests](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/integration-tests.yml)
+[![Security Scan](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/security.yml)
+[![Docker Build](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/docker.yml)
+[![CodeQL](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/codeql.yml)
+[![Performance](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/performance.yml/badge.svg)](https://github.com/kumaran-is/hurricane-tracker-mcp/actions/workflows/performance.yml)
 
 ## 📑 Table of Contents
 
 - [🌀 Hurricane Tracker MCP Server](#-hurricane-tracker-mcp-server)
   - [📑 Table of Contents](#-table-of-contents)
   - [🌟 Features](#-features)
+    - [Hurricane Tracking Capabilities](#hurricane-tracking-capabilities)
+    - [Technical Excellence](#technical-excellence)
   - [🛠️ Technology Stack](#️-technology-stack)
   - [Quick Start](#quick-start)
     - [Prerequisites](#prerequisites)
@@ -44,6 +41,7 @@ A production-grade LLM-friendly Model Context Protocol (MCP) server that provide
     - [Detailed Examples](#detailed-examples)
   - [📚 Documentation](#-documentation)
   - [🚀 CI/CD Pipeline](#-cicd-pipeline)
+    - [Workflow Features](#workflow-features)
   - [Running on Docker Container](#running-on-docker-container)
       - [1. Build and Run with Docker Compose](#1-build-and-run-with-docker-compose)
       - [2. Verify the Service is Running](#2-verify-the-service-is-running)
