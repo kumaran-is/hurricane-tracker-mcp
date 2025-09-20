@@ -18,6 +18,7 @@
 
 ### Enterprise Production Stack
 - **Fastify 5.6.0**: High-performance HTTP server framework with CORS support
+- **@fastify/cors 11.1.0**: CORS support for production HTTP transport
 - **Pino 9.9.4**: Structured logging with conditional output (stderr/stdout)
 - **Undici 7.16.0**: Modern HTTP client with advanced resilience patterns
 - **Zod 3.23.8**: Runtime validation and type safety throughout all layers
@@ -27,12 +28,15 @@
 - **Rate-Limiter-Flexible 5.0.3**: Enterprise-grade rate limiting with multiple algorithms
 - **LRU-Cache 11.2.1**: High-performance caching with TTL support
 - **UUID 13.0.0**: Session management and correlation ID generation
+- **Dotenv 17.2.2**: Environment configuration management
 
 ### Testing & Development Infrastructure
 - **Vitest 3.2.4**: Modern testing framework with multiple configurations
 - **@vitest/coverage-v8 3.2.4**: Comprehensive coverage reporting (targeting >90%)
 - **Supertest 7.0.0**: HTTP integration testing for Fastify server
 - **ESLint 9.35.0**: Code quality enforcement with TypeScript rules
+- **@typescript-eslint/eslint-plugin 8.43.0**: TypeScript-specific linting rules
+- **@typescript-eslint/parser 8.43.0**: TypeScript parser for ESLint
 - **TSX 4.20.5**: Fast TypeScript execution for development
 - **Pino-Pretty 13.1.1**: Beautiful log formatting for development
 
