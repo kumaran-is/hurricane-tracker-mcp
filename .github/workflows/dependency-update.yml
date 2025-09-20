@@ -1,0 +1,335 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Weekly on Monday at midnight UTC
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Type of update to perform'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - security
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Job 1: Dependabot Alternative (npm-check-updates)
+  npm-updates:
+    name: NPM Dependency Updates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Check for updates
+        id: check
+        run: |
+          npm install -g npm-check-updates
+          
+          echo "## 📦 Dependency Update Report" > update-report.md
+          echo "" >> update-report.md
+          echo "### Current Dependencies" >> update-report.md
+          echo "" >> update-report.md
+          echo '```json' >> update-report.md
+          cat package.json | jq '.dependencies' >> update-report.md
+          echo '```' >> update-report.md
+          echo "" >> update-report.md
+          
+          # Check for updates based on type
+          UPDATE_TYPE="${{ github.event.inputs.update_type || 'all' }}"
+          
+          if [ "$UPDATE_TYPE" = "security" ]; then
+            echo "### Security Updates Available" >> update-report.md
+            npm audit --json | jq '.vulnerabilities' > vulnerabilities.json
+            if [ -s vulnerabilities.json ]; then
+              echo "UPDATES_AVAILABLE=true" >> $GITHUB_OUTPUT
+            fi
+          elif [ "$UPDATE_TYPE" = "minor" ]; then
+            echo "### Minor Updates Available" >> update-report.md
+            ncu -u --target minor --jsonUpgraded > updates.json
+          elif [ "$UPDATE_TYPE" = "major" ]; then
+            echo "### Major Updates Available" >> update-report.md
+            ncu -u --target latest --jsonUpgraded > updates.json
+          else
+            echo "### All Updates Available" >> update-report.md
+            ncu -u --jsonUpgraded > updates.json
+          fi
+          
+          # Check if updates are available
+          if [ -f updates.json ] && [ -s updates.json ]; then
+            echo "UPDATES_AVAILABLE=true" >> $GITHUB_OUTPUT
+            echo '```json' >> update-report.md
+            cat updates.json >> update-report.md
+            echo '```' >> update-report.md
+          else
+            echo "No updates available" >> update-report.md
+          fi
+
+      - name: Apply updates
+        if: steps.check.outputs.UPDATES_AVAILABLE == 'true'
+        run: |
+          UPDATE_TYPE="${{ github.event.inputs.update_type || 'all' }}"
+          
+          if [ "$UPDATE_TYPE" = "security" ]; then
+            npm audit fix
+          elif [ "$UPDATE_TYPE" = "minor" ]; then
+            npx ncu -u --target minor
+            npm install
+          elif [ "$UPDATE_TYPE" = "major" ]; then
+            npx ncu -u --target latest
+            npm install
+          else
+            npx ncu -u
+            npm install
+          fi
+
+      - name: Run tests
+        if: steps.check.outputs.UPDATES_AVAILABLE == 'true'
+        run: |
+          npm test || echo "Tests failed - review needed"
+
+      - name: Create Pull Request
+        if: steps.check.outputs.UPDATES_AVAILABLE == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update dependencies'
+          title: '🤖 Automated Dependency Updates'
+          body-path: update-report.md
+          branch: deps/automated-updates-${{ github.run_number }}
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+          assignees: kumaran-is
+
+  # Job 2: Security-Only Updates
+  security-updates:
+    name: Security Vulnerability Fixes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.update_type == 'security'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Check for vulnerabilities
+        id: audit
+        run: |
+          npm audit --json > audit-report.json || true
+          
+          CRITICAL=$(cat audit-report.json | jq '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(cat audit-report.json | jq '.metadata.vulnerabilities.high // 0')
+          
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "VULNERABILITIES_FOUND=true" >> $GITHUB_OUTPUT
+            echo "CRITICAL=$CRITICAL" >> $GITHUB_OUTPUT
+            echo "HIGH=$HIGH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Auto-fix vulnerabilities
+        if: steps.audit.outputs.VULNERABILITIES_FOUND == 'true'
+        run: |
+          npm audit fix --force
+          npm test || true
+
+      - name: Create security PR
+        if: steps.audit.outputs.VULNERABILITIES_FOUND == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'fix(security): patch vulnerabilities'
+          title: '🔒 Critical Security Updates'
+          body: |
+            ## 🚨 Security Vulnerability Fixes
+            
+            This PR addresses the following vulnerabilities:
+            - **Critical**: ${{ steps.audit.outputs.CRITICAL }}
+            - **High**: ${{ steps.audit.outputs.HIGH }}
+            
+            ### Audit Report
+            ```json
+            $(cat audit-report.json | jq '.vulnerabilities')
+            ```
+            
+            **⚠️ This is an automated security fix. Please review and merge promptly.**
+          branch: security/auto-fix-${{ github.run_number }}
+          labels: |
+            security
+            critical
+            automated
+
+  # Job 3: Docker Base Image Updates
+  docker-updates:
+    name: Docker Image Updates
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('Dockerfile') != '' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Node.js updates
+        id: node_check
+        run: |
+          CURRENT_VERSION=$(grep "FROM node:" Dockerfile | cut -d':' -f2 | cut -d'-' -f1)
+          LATEST_VERSION=$(curl -s https://nodejs.org/dist/latest-v22.x/ | grep -oP 'v\K[0-9.]+')
+          
+          echo "Current Node.js: $CURRENT_VERSION"
+          echo "Latest Node.js: $LATEST_VERSION"
+          
+          if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+            echo "UPDATE_AVAILABLE=true" >> $GITHUB_OUTPUT
+            echo "NEW_VERSION=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Dockerfile
+        if: steps.node_check.outputs.UPDATE_AVAILABLE == 'true'
+        run: |
+          sed -i "s/FROM node:[0-9.]\+-alpine/FROM node:${{ steps.node_check.outputs.NEW_VERSION }}-alpine/g" Dockerfile
+
+      - name: Test Docker build
+        if: steps.node_check.outputs.UPDATE_AVAILABLE == 'true'
+        run: |
+          docker build -t test-image .
+          docker run --rm test-image node --version
+
+      - name: Create Docker update PR
+        if: steps.node_check.outputs.UPDATE_AVAILABLE == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(docker): update base image'
+          title: '🐳 Update Docker Base Image'
+          body: |
+            Updates Docker base image to Node.js ${{ steps.node_check.outputs.NEW_VERSION }}
+          branch: docker/base-update-${{ github.run_number }}
+          labels: |
+            docker
+            dependencies
+
+  # Job 4: GitHub Actions Updates
+  actions-updates:
+    name: GitHub Actions Updates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update GitHub Actions
+        uses: actions/dependency-review-action@v3
+        with:
+          config-file: '.github/dependency-review-config.yml'
+        continue-on-error: true
+
+      - name: Check for Action updates
+        id: actions_check
+        run: |
+          # Find all action references in workflows
+          grep -r "uses:" .github/workflows/ | grep -oP '[a-zA-Z0-9-]+/[a-zA-Z0-9-]+@v[0-9]+' | sort -u > current-actions.txt
+          
+          echo "## Current GitHub Actions" > actions-report.md
+          echo '```' >> actions-report.md
+          cat current-actions.txt >> actions-report.md
+          echo '```' >> actions-report.md
+          
+          # Check each action for updates
+          UPDATES_FOUND=false
+          while read -r action; do
+            REPO=$(echo $action | cut -d'@' -f1)
+            CURRENT_VERSION=$(echo $action | cut -d'@' -f2)
+            
+            # Get latest version from GitHub API
+            LATEST=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | jq -r '.tag_name' || echo "")
+            
+            if [ ! -z "$LATEST" ] && [ "$LATEST" != "$CURRENT_VERSION" ]; then
+              echo "Update available: $action -> $REPO@$LATEST" >> actions-report.md
+              UPDATES_FOUND=true
+            fi
+          done < current-actions.txt
+          
+          if [ "$UPDATES_FOUND" = true ]; then
+            echo "UPDATES_AVAILABLE=true" >> $GITHUB_OUTPUT
+          fi
+
+  # Job 5: Dependency Report
+  dependency-report:
+    name: Generate Dependency Report
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate comprehensive report
+        run: |
+          echo "# 📄 Weekly Dependency Report" > dependency-report.md
+          echo "Generated: $(date)" >> dependency-report.md
+          echo "" >> dependency-report.md
+          
+          # Outdated packages
+          echo "## 📦 Outdated Packages" >> dependency-report.md
+          echo '```' >> dependency-report.md
+          npm outdated || true >> dependency-report.md
+          echo '```' >> dependency-report.md
+          echo "" >> dependency-report.md
+          
+          # Security audit
+          echo "## 🔒 Security Audit" >> dependency-report.md
+          echo '```' >> dependency-report.md
+          npm audit --production || true >> dependency-report.md
+          echo '```' >> dependency-report.md
+          echo "" >> dependency-report.md
+          
+          # License check
+          echo "## 📜 License Summary" >> dependency-report.md
+          npx license-checker --production --summary >> dependency-report.md || true
+          echo "" >> dependency-report.md
+          
+          # Dependency tree
+          echo "## 🌳 Dependency Tree" >> dependency-report.md
+          echo '```' >> dependency-report.md
+          npm ls --depth=2 >> dependency-report.md || true
+          echo '```' >> dependency-report.md
+
+      - name: Create issue with report
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: '📅 Weekly Dependency Report'
+          content-filepath: dependency-report.md
+          labels: |
+            dependencies
+            report
+            automated
