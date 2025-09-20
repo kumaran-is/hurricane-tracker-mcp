@@ -434,7 +434,7 @@ All tools now use **true real data patterns**:
 - **[CLINE_SETUP.md](docs/CLINE_SETUP.md)** - Complete setup guide for Cline (VS Code extension)
 - **[CLAUDE_DESKTOP_SETUP.md](docs/CLAUDE_DESKTOP_SETUP.md)** - Complete setup guide for Claude Desktop
 - **[MCP_INSPECTOR_TEST_GUIDE.md](docs/MCP_INSPECTOR_TEST_GUIDE.md)** - Comprehensive testing guide with MCP Inspector
-- **[GITHUB_ACTIONS_GUIDE.md](docs/GITHUB_ACTIONS_GUIDE.md)** - CI/CD pipeline documentation and workflow guide
+- **[GITHUB_ACTIONS_SETUP.md](docs/GITHUB_ACTIONS_SETUP.md)** - CI/CD pipeline setup, billing, and troubleshooting guide
 
 ## 🚀 CI/CD Pipeline
 
@@ -449,7 +449,7 @@ The project uses comprehensive GitHub Actions workflows for continuous integrati
 - **Documentation:** Automated API docs, architecture diagrams, GitHub Pages deployment
 - **Dependency Management:** Weekly updates with automated PRs
 
-See [GitHub Actions Guide](docs/GITHUB_ACTIONS_GUIDE.md) for detailed workflow documentation.
+See [GitHub Actions Setup Guide](docs/GITHUB_ACTIONS_SETUP.md) for detailed workflow documentation.
 
 ## Running on Docker Container
 
