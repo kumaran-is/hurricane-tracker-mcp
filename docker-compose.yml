@@ -7,8 +7,8 @@ services:
     container_name: hurricane-tracker-mcp
     restart: unless-stopped
     ports:
-      # MCP HTTP transport port
-      - "${HTTP_PORT:-8080}:${HTTP_PORT:-8080}"
+      # MCP HTTP transport port (host port 8081 to avoid conflict with Weather MCP)
+      - "8081:8080"
       # Metrics endpoint port (optional)
       - "${METRICS_PORT:-9090}:${METRICS_PORT:-9090}"
     environment:
